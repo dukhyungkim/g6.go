@@ -1,7 +1,14 @@
 package install
 
-import "net/http"
+import (
+	"github.com/go-chi/chi/v5"
+	"net/http"
+)
 
-func Handler(w http.ResponseWriter, r *http.Request) {
+func DefaultRouter(r chi.Router) {
+	r.Get("/", indexHandler)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("install index"))
 }

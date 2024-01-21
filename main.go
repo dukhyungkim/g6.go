@@ -32,7 +32,10 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/", defaultHandler)
-	r.Get("/install", install.Handler)
+	r.Route("/install", install.DefaultRouter)
+
+	fileServer := http.FileServer(http.Dir("static"))
+	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
 	addr := ":8080"
 	fmt.Printf("running on %s\n", addr)
