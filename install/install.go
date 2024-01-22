@@ -6,9 +6,11 @@ import (
 )
 
 func DefaultRouter(r chi.Router) {
-	r.Get("/", indexHandler)
+	r.Get("/", indexHandler())
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	_, _ = w.Write([]byte("install index"))
+func indexHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("install index"))
+	}
 }
