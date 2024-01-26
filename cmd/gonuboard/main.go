@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -18,15 +18,32 @@ var (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			NeedInstall = true
-		} else {
-			log.Fatalln(err)
-		}
+	parseFlags()
+
+	if FlagVersion {
+		printVersion()
+		return
 	}
 
+	if FlagHelp {
+		flag.Usage()
+		return
+	}
+
+	err := loadEnv()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	err = Run()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
+func Run() error {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -40,7 +57,23 @@ func main() {
 
 	addr := ":8080"
 	fmt.Printf("running on %s\n", addr)
-	log.Fatalln(http.ListenAndServe(addr, r))
+	err := http.ListenAndServe(addr, r)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadEnv() error {
+	err := godotenv.Load()
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			NeedInstall = true
+		} else {
+			return err
+		}
+	}
+	return nil
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {

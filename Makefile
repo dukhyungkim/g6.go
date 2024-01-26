@@ -7,3 +7,7 @@ build:
 .PHONY: clean
 clean:
 	@rm -f ${GONUBOARD_BINARY}
+
+.PHONY: run
+run:
+	@go run ./cmd/gonuboard

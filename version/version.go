@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Version        = "그누보드6.0.0"
+	Version        = "Go누보드6.0.0"
 	RuntimeVersion = runtime.Version()
 	RouterVersion  = ""
 )
