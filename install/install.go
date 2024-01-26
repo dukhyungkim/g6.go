@@ -1,10 +1,11 @@
 package install
 
 import (
-	"github.com/dukhyungkim/g6.go/version"
+	"net/http"
+
+	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/flosch/pongo2/v6"
 	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func DefaultRouter(r chi.Router) {

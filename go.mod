@@ -1,4 +1,4 @@
-module github.com/dukhyungkim/g6.go
+module github.com/dukhyungkim/gonuboard
 
 go 1.21.5
 
