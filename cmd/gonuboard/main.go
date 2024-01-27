@@ -8,9 +8,11 @@ import (
 	"os"
 
 	"github.com/dukhyungkim/gonuboard/install"
+	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
+	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
 var (
@@ -52,8 +54,10 @@ func Run() error {
 	r.Get("/", defaultHandler)
 	r.Route("/install", install.DefaultRouter)
 
-	fileServer := http.FileServer(http.Dir("static"))
-	r.Handle("/static/*", http.StripPrefix("/static", fileServer))
+	staticServer := http.FileServer(http.Dir("static"))
+	r.Handle("/static/*", http.StripPrefix("/static", staticServer))
+	templatesServer := http.FileServer(http.Dir("templates"))
+	r.Handle("/templates/*", http.StripPrefix("/templates", templatesServer))
 
 	addr := ":8080"
 	fmt.Printf("running on %s\n", addr)
@@ -77,10 +81,15 @@ func loadEnv() error {
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
-	if NeedInstall {
-		http.Redirect(w, r, "/install", http.StatusMovedPermanently)
+	const templatePath = "templates/basic/index.html"
+	request := util.NewRequest(r).ToMap()
+	data := exec.NewContext(map[string]any{
+		"request": request,
+	})
+
+	err := util.RenderTemplate(w, templatePath, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	_, _ = w.Write([]byte("hello gnuboard"))
 }
