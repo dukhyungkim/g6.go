@@ -50,6 +50,7 @@ func Run() error {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(mainMiddleware)
 
 	r.Get("/", defaultHandler)
 	r.Route("/install", install.DefaultRouter)
