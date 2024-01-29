@@ -1,7 +1,7 @@
 {% extends "_layout.html" %}
 
 {% block content %}
-    <form id="frm_install" method="post" action="install" autocomplete="off" onsubmit="return frm_install_submit(this);">
+    <form id="frm_install" method="post" action="{{ url_for('install') }}" autocomplete="off" onsubmit="return frm_install_submit(this);">
         <input type="hidden" name="token" value="">
         <div class="ins_inner">
             <table class="ins_frm">
