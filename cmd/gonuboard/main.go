@@ -83,9 +83,9 @@ func loadEnv() error {
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	const templatePath = "templates/basic/index.html"
-	request := util.NewRequest(r).ToMap()
+	request := r.Context().Value("request")
 	data := exec.NewContext(map[string]any{
-		"request": request,
+		"request": request.(util.Request).ToMap(),
 	})
 
 	err := util.RenderTemplate(w, templatePath, data)

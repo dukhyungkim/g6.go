@@ -9,14 +9,10 @@ import (
 
 func init() {
 	gonja.DefaultContext.Set("theme_asset", themeAsset)
-	gonja.DefaultContext.Set("url_for", urlFor)
 }
 
 func themeAsset(r map[string]any, assetPath string) string {
 	return "templates/basic/static/" + assetPath
-}
-func urlFor(basePath string, assetPath string) string {
-	return basePath + assetPath
 }
 
 func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) error {

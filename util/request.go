@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"net/http"
 )
 
@@ -12,10 +13,14 @@ type Request struct {
 }
 
 func NewRequest(r *http.Request) Request {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	baseURL := fmt.Sprintf("%s://%s/", scheme, r.Host)
+
 	return Request{
-		State: State{
-			Config: Config{},
-		},
+		BaseURL: baseURL,
 	}
 }
 
