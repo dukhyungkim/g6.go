@@ -92,9 +92,5 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 		"request": request.(util.Request).ToMap(),
 	})
 
-	err := util.RenderTemplate(w, templatePath, data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	util.RenderTemplate(w, templatePath, data)
 }

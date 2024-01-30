@@ -19,16 +19,11 @@ func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const templatePath = "install/templates/main.html"
 		data := exec.NewContext(map[string]any{
-			"default_version": version.Version,
 			"python_version":  version.RuntimeVersion,
 			"fastapi_version": version.RouterVersion,
 		})
 
-		err := util.RenderTemplate(w, templatePath, data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		util.RenderTemplate(w, templatePath, data)
 	}
 }
 
@@ -45,11 +40,7 @@ func licenseHandler() http.HandlerFunc {
 			"license": license,
 		})
 
-		err = util.RenderTemplate(w, templatePath, data)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		util.RenderTemplate(w, templatePath, data)
 	}
 }
 

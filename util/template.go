@@ -24,18 +24,18 @@ func urlFor(assetPath string) string {
 	return strings.Join(split, "/")
 }
 
-func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) error {
+func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) {
 	tpl, err := gonja.FromFile(path)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	err = tpl.Execute(w, data)
 	if err != nil {
-		return err
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	return nil
 }
 
 func AlertTemplate(req Request, message string, redirect string) ([]byte, error) {
