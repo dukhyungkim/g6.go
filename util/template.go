@@ -2,17 +2,26 @@ package util
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
 func init() {
-	gonja.DefaultContext.Set("theme_asset", themeAsset)
+	defaultCtx := gonja.DefaultContext
+	defaultCtx.Set("default_version", "Go누보드6.0.0")
+	defaultCtx.Set("theme_asset", themeAsset)
+	defaultCtx.Set("url_for", urlFor)
 }
 
 func themeAsset(r map[string]any, assetPath string) string {
 	return "templates/basic/static/" + assetPath
+}
+
+func urlFor(assetPath string) string {
+	split := strings.Split(assetPath, "_")
+	return strings.Join(split, "/")
 }
 
 func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) error {
