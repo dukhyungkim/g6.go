@@ -28,3 +28,22 @@ func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) erro
 
 	return nil
 }
+
+func AlertTemplate(req Request, message string, redirect string) ([]byte, error) {
+	tpl, err := gonja.FromFile("templates/basic/alert.html")
+	if err != nil {
+		return nil, err
+	}
+	data := exec.NewContext(map[string]any{
+		"request": req.ToMap(),
+		"errors":  []string{message},
+		"url":     redirect,
+	})
+
+	bytes, err := tpl.ExecuteToBytes(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes, nil
+}

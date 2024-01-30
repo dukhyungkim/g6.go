@@ -4,10 +4,10 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dukhyungkim/gonuboard/install"
 	"net/http"
 	"os"
 
-	"github.com/dukhyungkim/gonuboard/install"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -50,15 +50,19 @@ func Run() error {
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(mainMiddleware)
-
-	r.Get("/", defaultHandler)
-	r.Route("/install", install.DefaultRouter)
 
 	staticServer := http.FileServer(http.Dir("static"))
 	r.Handle("/static/*", http.StripPrefix("/static", staticServer))
 	templatesServer := http.FileServer(http.Dir("templates"))
 	r.Handle("/templates/*", http.StripPrefix("/templates", templatesServer))
+
+	r.Group(func(r chi.Router) {
+		r.Use(requestMiddleware)
+		r.Use(mainMiddleware)
+
+		r.Get("/", defaultHandler)
+		r.Route("/install", install.DefaultRouter)
+	})
 
 	addr := ":8080"
 	fmt.Printf("running on %s\n", addr)
