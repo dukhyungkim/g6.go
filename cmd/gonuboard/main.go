@@ -4,7 +4,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/install"
+	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"net/http"
 	"os"
 
@@ -13,10 +15,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"github.com/nikolalohinski/gonja/v2/exec"
-)
-
-var (
-	NeedInstall = false
 )
 
 func main() {
@@ -57,8 +55,8 @@ func Run() error {
 	r.Handle("/templates/*", http.StripPrefix("/templates", templatesServer))
 
 	r.Group(func(r chi.Router) {
-		r.Use(requestMiddleware)
-		r.Use(mainMiddleware)
+		r.Use(mw.RequestMiddleware)
+		r.Use(mw.MainMiddleware)
 
 		r.Get("/", defaultHandler)
 		r.Route("/install", install.DefaultRouter)
@@ -77,7 +75,7 @@ func loadEnv() error {
 	err := godotenv.Load()
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			NeedInstall = true
+			config.NeedInstall = true
 		} else {
 			return err
 		}

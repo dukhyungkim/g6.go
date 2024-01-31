@@ -1,11 +1,10 @@
 package util
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
+	"net/http"
+	"sync"
 )
 
 func init() {
@@ -19,9 +18,11 @@ func themeAsset(r map[string]any, assetPath string) string {
 	return "templates/basic/static/" + assetPath
 }
 
+var UrlMap = sync.Map{}
+
 func urlFor(assetPath string) string {
-	split := strings.Split(assetPath, "_")
-	return strings.Join(split, "/")
+	value, _ := UrlMap.Load(assetPath)
+	return value.(string)
 }
 
 func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) {

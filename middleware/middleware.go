@@ -1,18 +1,19 @@
-package main
+package middleware
 
 import (
 	"context"
+	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/util"
 	"net/http"
 	"strings"
 )
 
-func mainMiddleware(next http.Handler) http.Handler {
+func MainMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		request := r.Context().Value(KeyRequest).(util.Request)
 
 		if !strings.HasPrefix(r.URL.Path, "/install") {
-			if NeedInstall {
+			if config.NeedInstall {
 				renderAlertTemplate(w, request)
 				return
 			}
@@ -39,7 +40,7 @@ const (
 	KeyRequest CtxKey = "request"
 )
 
-func requestMiddleware(next http.Handler) http.Handler {
+func RequestMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		request := util.NewRequest(r)
 		ctx := context.WithValue(r.Context(), KeyRequest, request)

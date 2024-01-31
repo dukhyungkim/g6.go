@@ -1,22 +1,30 @@
 package install
 
 import (
-	"net/http"
-	"os"
-
+	"github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/go-chi/chi/v5"
 	"github.com/nikolalohinski/gonja/v2/exec"
+	"net/http"
+	"net/url"
+	"os"
 )
 
 func DefaultRouter(r chi.Router) {
 	r.Get("/", indexHandler())
 	r.Get("/license", licenseHandler())
+	r.Post("/form", formHandler())
 }
 
 func indexHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO
+		request := r.Context().Value(middleware.KeyRequest).(util.Request)
+		installURL, _ := url.JoinPath(request.BaseURL, r.RequestURI)
+		util.UrlMap.Store("install_license", installURL+"/license")
+		util.UrlMap.Store("install_form", installURL+"/form")
+
 		const templatePath = "install/templates/main.html"
 		data := exec.NewContext(map[string]any{
 			"python_version":  version.RuntimeVersion,
@@ -50,4 +58,22 @@ func readLicense() (string, error) {
 		return "", err
 	}
 	return string(license), nil
+}
+
+func formHandler() http.HandlerFunc {
+	// TODO
+	return func(w http.ResponseWriter, r *http.Request) {
+		license, err := readLicense()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		const templatePath = "install/templates/license.html"
+		data := exec.NewContext(map[string]any{
+			"license": license,
+		})
+
+		util.RenderTemplate(w, templatePath, data)
+	}
 }
