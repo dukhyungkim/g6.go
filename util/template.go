@@ -21,7 +21,10 @@ func themeAsset(r map[string]any, assetPath string) string {
 var UrlMap = sync.Map{}
 
 func urlFor(assetPath string) string {
-	value, _ := UrlMap.Load(assetPath)
+	value, ok := UrlMap.Load(assetPath)
+	if !ok {
+		return ""
+	}
 	return value.(string)
 }
 
