@@ -10,6 +10,11 @@ import (
 
 func MainMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		if !shouldRunMiddleware(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		request := r.Context().Value(KeyRequest).(util.Request)
 
 		if !strings.HasPrefix(r.URL.Path, "/install") {
@@ -22,6 +27,14 @@ func MainMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func shouldRunMiddleware(path string) bool {
+	switch path {
+	case "/generate_token":
+		return false
+	}
+	return true
 }
 
 func renderAlertTemplate(w http.ResponseWriter, request util.Request) {

@@ -7,6 +7,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/install"
 	mw "github.com/dukhyungkim/gonuboard/middleware"
+	"github.com/go-chi/render"
 	"net/http"
 	"os"
 
@@ -59,6 +60,7 @@ func Run() error {
 		r.Use(mw.MainMiddleware)
 
 		r.Get("/", defaultHandler)
+		r.Post("/generate_token", generateToken)
 		r.Route("/install", install.DefaultRouter)
 	})
 
@@ -91,4 +93,29 @@ func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	util.RenderTemplate(w, templatePath, data)
+}
+
+type TokenResponse struct {
+	Success bool   `json:"success"`
+	Token   string `json:"token"`
+}
+
+func NewTokenResponse(token string) TokenResponse {
+	return TokenResponse{
+		Success: true,
+		Token:   token,
+	}
+}
+
+func (t TokenResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func generateToken(w http.ResponseWriter, r *http.Request) {
+	tokenHex, err := util.TokenHex(16)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_ = render.Render(w, r, NewTokenResponse(tokenHex))
 }
