@@ -107,7 +107,7 @@ func NewTokenResponse(token string) TokenResponse {
 	}
 }
 
-func (t TokenResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (t TokenResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
