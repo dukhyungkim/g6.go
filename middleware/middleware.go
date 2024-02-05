@@ -5,6 +5,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/util"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -60,4 +61,20 @@ func RequestMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
+}
+
+func UrlForMiddleware(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		setUrlMapForInstall(r)
+		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
+func setUrlMapForInstall(r *http.Request) {
+	request := r.Context().Value(KeyRequest).(util.Request)
+	installURL, _ := url.JoinPath(request.BaseURL, "install")
+	util.UrlMap.Store("install_license", installURL+"/license")
+	util.UrlMap.Store("install_form", installURL+"/form")
+	util.UrlMap.Store("install", installURL)
 }

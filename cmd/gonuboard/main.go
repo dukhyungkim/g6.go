@@ -58,6 +58,7 @@ func Run() error {
 	r.Group(func(r chi.Router) {
 		r.Use(mw.RequestMiddleware)
 		r.Use(mw.MainMiddleware)
+		r.Use(mw.UrlForMiddleware)
 
 		r.Get("/", defaultHandler)
 		r.Post("/generate_token", generateToken)
