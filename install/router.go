@@ -76,6 +76,11 @@ func installDatabase() http.HandlerFunc {
 			return
 		}
 
+		err = r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		engine := r.FormValue("db_engine")
 		for _, setKey := range []func() error{
 			setKeyToEnv(envPath, "DB_ENGINE", engine),
@@ -98,7 +103,7 @@ func installDatabase() http.HandlerFunc {
 			return
 		}
 
-		const templatePath = "install/templates/result.html"
+		//const templatePath = "install/templates/result.html"
 		//util.RenderTemplate(w, templatePath, nil)
 	}
 }
@@ -153,6 +158,7 @@ func setKeyToEnv(filePath, key string, value any) func() error {
 					break
 				}
 			}
+			fileContent = strings.Join(lines, "\n")
 		} else {
 			fileContent += fmt.Sprintf("\n%s=%v", key, value)
 		}
