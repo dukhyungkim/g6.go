@@ -10,7 +10,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
+	"strconv"
 )
 
 func DefaultRouter(r chi.Router) {
@@ -66,41 +66,52 @@ func formHandler() http.HandlerFunc {
 	}
 }
 
-const envPath = ".env"
-
 func installDatabase() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := copyFile("example.env", envPath)
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		engine := r.FormValue("db_engine")
+		if !db.IsSupportedEngines(engine) {
+			http.Error(w, "지원 가능한 데이터베이스 엔진을 선택해주세요.", http.StatusBadRequest)
+			return
+		}
+
+		dbPort, err := strconv.Atoi(r.FormValue("db_port"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		sessionSecretKey, err := util.TokenURLSafe(50)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		err = r.ParseForm()
+		err = copyFile("example.env", util.EnvPath)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		engine := r.FormValue("db_engine")
 		for _, setKey := range []func() error{
-			setKeyToEnv(envPath, "DB_ENGINE", engine),
-			setKeyToEnv(envPath, "DB_HOST", r.FormValue("db_host")),
-			setKeyToEnv(envPath, "DB_PORT", r.FormValue("db_port")),
-			setKeyToEnv(envPath, "DB_USER", r.FormValue("db_user")),
-			setKeyToEnv(envPath, "DB_PASSWORD", r.FormValue("db_password")),
-			setKeyToEnv(envPath, "DB_NAME", r.FormValue("db_name")),
-			setKeyToEnv(envPath, "DB_TABLE_PREFIX", r.FormValue("db_table_prefix")),
-			setKeyToEnv(envPath, "SESSION_SECRET_KEY", r.FormValue("session_secret_key")),
-			setKeyToEnv(envPath, "COOKIE_DOMAIN", r.FormValue("cookie_domain")),
+			util.SetKeyToEnv(util.EnvPath, "DB_ENGINE", engine),
+			util.SetKeyToEnv(util.EnvPath, "DB_HOST", r.FormValue("db_host")),
+			util.SetKeyToEnv(util.EnvPath, "DB_PORT", dbPort),
+			util.SetKeyToEnv(util.EnvPath, "DB_USER", r.FormValue("db_user")),
+			util.SetKeyToEnv(util.EnvPath, "DB_PASSWORD", r.FormValue("db_password")),
+			util.SetKeyToEnv(util.EnvPath, "DB_NAME", r.FormValue("db_name")),
+			util.SetKeyToEnv(util.EnvPath, "DB_TABLE_PREFIX", r.FormValue("db_table_prefix")),
+			util.SetKeyToEnv(util.EnvPath, "SESSION_SECRET_KEY", sessionSecretKey),
+			util.SetKeyToEnv(util.EnvPath, "COOKIE_DOMAIN", ""),
 		} {
 			if err = setKey(); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
-		}
-
-		if !db.IsSupportedEngines(engine) {
-			http.Error(w, "지원 가능한 데이터베이스 엔진을 선택해주세요.", http.StatusBadRequest)
-			return
 		}
 
 		//const templatePath = "install/templates/result.html"
@@ -139,34 +150,4 @@ func copyFile(src, dst string) error {
 		return err
 	}
 	return nil
-}
-
-func setKeyToEnv(filePath, key string, value any) func() error {
-	return func() error {
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			return err
-		}
-
-		fileContent := string(content)
-
-		if strings.Contains(fileContent, key) {
-			lines := strings.Split(fileContent, "\n")
-			for i, line := range lines {
-				if strings.HasPrefix(line, key) {
-					lines[i] = fmt.Sprintf("%s=%v", key, value)
-					break
-				}
-			}
-			fileContent = strings.Join(lines, "\n")
-		} else {
-			fileContent += fmt.Sprintf("\n%s=%v", key, value)
-		}
-
-		err = os.WriteFile(envPath, []byte(fileContent), os.ModePerm)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
 }
