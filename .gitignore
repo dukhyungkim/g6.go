@@ -2,3 +2,4 @@
 .DS_Store
 /gonuboard*
 .env
+sqlite3.db

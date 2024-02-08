@@ -1,5 +1,6 @@
 package config
 
 var (
-	NeedInstall = false
+	NeedInstall  = false
+	IsResponsive = false
 )

@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/dukhyungkim/gonuboard/version"
@@ -112,6 +113,18 @@ func installDatabase() http.HandlerFunc {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+		}
+
+		isResponsive, err := strconv.ParseBool(os.Getenv("IS_RESPONSIVE"))
+		if err != nil {
+			isResponsive = false
+		}
+		config.IsResponsive = isResponsive
+
+		err = db.NewDB(engine)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		//const templatePath = "install/templates/result.html"
