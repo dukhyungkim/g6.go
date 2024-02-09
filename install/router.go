@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/plugin"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/go-chi/chi/v5"
@@ -122,6 +123,17 @@ func installDatabase() http.HandlerFunc {
 		config.IsResponsive = isResponsive
 
 		err = db.NewDB(engine)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		pluginList, err := plugin.ReadPluginState()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = plugin.WritePluginState(pluginList)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

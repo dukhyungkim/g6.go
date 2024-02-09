@@ -3,3 +3,5 @@
 /gonuboard*
 .env
 sqlite3.db
+plugin_states.json
+plugin_states.json.lock
