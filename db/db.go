@@ -40,3 +40,7 @@ func NewDB(engine string) error {
 	instance = db
 	return nil
 }
+
+func GetDBInstance() *sql.DB {
+	return instance
+}
