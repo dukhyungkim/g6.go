@@ -231,7 +231,7 @@ func installProcess() http.HandlerFunc {
 
 		form := formCache.Get("form").Value()
 
-		dbInstance := db.NewDB(form.DBEngine)
+		//dbInstance := db.NewDB(form.DBEngine)
 		sendSSE(w, "데이터베이스 연결 완료")
 
 		if form.Reinstall {
@@ -239,7 +239,6 @@ func installProcess() http.HandlerFunc {
 			sendSSE(w, "기존 데이터베이스 테이블 삭제 완료")
 		}
 
-		// TODO create tables
 		sendSSE(w, "데이터베이스 테이블 생성 완료")
 
 		// TODO setup admin

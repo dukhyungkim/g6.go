@@ -5,6 +5,7 @@ go 1.21.5
 require (
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/render v1.0.3
+	github.com/jellydator/ttlcache/v3 v3.1.1
 	github.com/joho/godotenv v1.5.1
 	github.com/nikolalohinski/gonja/v2 v2.1.0
 	modernc.org/sqlite v1.28.0
@@ -14,7 +15,6 @@ require (
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/jellydator/ttlcache/v3 v3.1.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
