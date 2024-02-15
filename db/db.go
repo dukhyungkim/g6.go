@@ -1,46 +1,87 @@
 package db
 
 import (
-	"context"
-	"database/sql"
+	"github.com/dukhyungkim/gonuboard/model"
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"strings"
-	"time"
+)
 
-	_ "modernc.org/sqlite"
+const (
+	EngineSqlite   = "sqlite"
+	EnginePostgres = "postgresql"
+	EngineMysql    = "mysql"
 )
 
 func IsSupportedEngines(engine string) bool {
 	switch strings.ToLower(engine) {
-	case "sqlite", "postgresql", "mysql":
+	case EngineSqlite, EnginePostgres, EngineMysql:
 		return true
 	}
 	return false
 }
 
-var instance *sql.DB
-
-func NewDB(engine string) error {
-	if instance != nil {
-		return nil
-	}
-
-	db, err := sql.Open(engine, "sqlite3.db")
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	err = db.PingContext(ctx)
-	if err != nil {
-		return err
-	}
-
-	instance = db
-	return nil
+type Database struct {
+	*gorm.DB
 }
 
-func GetDBInstance() *sql.DB {
-	return instance
+func NewDB(engine string, prefix string) (*Database, error) {
+	var db *gorm.DB
+	var err error
+	switch strings.ToLower(engine) {
+	case EngineSqlite:
+		db, err = gorm.Open(sqlite.Open("sqlite3.db"), &gorm.Config{
+			NamingStrategy: schema.NamingStrategy{
+				TablePrefix: prefix,
+			},
+		})
+	case EnginePostgres:
+		// TODO
+	case EngineMysql:
+		// TODO
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &Database{DB: db}, nil
+}
+
+func (db *Database) MigrateTables() error {
+	return db.AutoMigrate(
+		&model.Auth{},
+		&model.Autosave{},
+		&model.Board{},
+		&model.BoardFile{},
+		&model.BoardGood{},
+		&model.BoardNew{},
+		&model.Config{},
+		&model.Content{},
+		&model.Faq{},
+		&model.FaqMaster{},
+		&model.Group{},
+		&model.GroupMember{},
+		&model.Login{},
+		&model.Mail{},
+		&model.Member{},
+		&model.MemberSocialProfile{},
+		&model.Memo{},
+		&model.Menu{},
+		&model.NewWin{},
+		&model.Point{},
+		&model.Poll{},
+		&model.PollEtc{},
+		&model.Popular{},
+		&model.QaConfig{},
+		&model.QaContent{},
+		&model.Scrap{},
+		&model.Uniqid{},
+		&model.Visit{},
+		&model.VisitSum{},
+		&model.WriteFree{},
+		&model.WriteGallery{},
+		&model.WriteNotice{},
+		&model.WriteQa{},
+	)
 }

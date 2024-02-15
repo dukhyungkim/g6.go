@@ -119,7 +119,8 @@ func installDatabase() http.HandlerFunc {
 		}
 		config.IsResponsive = isResponsive
 
-		err = db.NewDB(form.DBEngine)
+		// TODO use db handler
+		_, err = db.NewDB(form.DBEngine, form.DBTablePrefix)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -231,7 +232,11 @@ func installProcess() http.HandlerFunc {
 
 		form := formCache.Get("form").Value()
 
-		//dbInstance := db.NewDB(form.DBEngine)
+		dbConn, err := db.NewDB(form.DBEngine, form.DBTablePrefix)
+		if err != nil {
+			sendSSE(w, fmt.Sprintf("[error] 설치가 실패했습니다. %v", err))
+			return
+		}
 		sendSSE(w, "데이터베이스 연결 완료")
 
 		if form.Reinstall {
@@ -239,6 +244,11 @@ func installProcess() http.HandlerFunc {
 			sendSSE(w, "기존 데이터베이스 테이블 삭제 완료")
 		}
 
+		err = dbConn.MigrateTables()
+		if err != nil {
+			sendSSE(w, fmt.Sprintf("[error] 설치가 실패했습니다. %v", err))
+			return
+		}
 		sendSSE(w, "데이터베이스 테이블 생성 완료")
 
 		// TODO setup admin
