@@ -41,5 +41,5 @@ type Poll struct {
 
 // TableName Poll's table name
 func (*Poll) TableName() string {
-	return TableNamePoll
+	return Prefix + TableNamePoll
 }

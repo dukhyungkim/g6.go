@@ -23,5 +23,5 @@ type Memo struct {
 
 // TableName Memo's table name
 func (*Memo) TableName() string {
-	return TableNameMemo
+	return Prefix + TableNameMemo
 }

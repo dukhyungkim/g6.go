@@ -18,5 +18,5 @@ type Menu struct {
 
 // TableName Menu's table name
 func (*Menu) TableName() string {
-	return TableNameMenu
+	return Prefix + TableNameMenu
 }

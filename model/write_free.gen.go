@@ -54,5 +54,5 @@ type WriteFree struct {
 
 // TableName WriteFree's table name
 func (*WriteFree) TableName() string {
-	return TableNameWriteFree
+	return Prefix + TableNameWriteFree
 }

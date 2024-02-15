@@ -12,5 +12,5 @@ type Uniqid struct {
 
 // TableName Uniqid's table name
 func (*Uniqid) TableName() string {
-	return TableNameUniqid
+	return Prefix + TableNameUniqid
 }

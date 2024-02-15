@@ -13,5 +13,5 @@ type Auth struct {
 
 // TableName Auth's table name
 func (*Auth) TableName() string {
-	return TableNameAuth
+	return Prefix + TableNameAuth
 }

@@ -27,5 +27,5 @@ type NewWin struct {
 
 // TableName NewWin's table name
 func (*NewWin) TableName() string {
-	return TableNameNewWin
+	return Prefix + TableNameNewWin
 }

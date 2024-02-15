@@ -54,5 +54,5 @@ type WriteQa struct {
 
 // TableName WriteQa's table name
 func (*WriteQa) TableName() string {
-	return TableNameWriteQa
+	return Prefix + TableNameWriteQa
 }

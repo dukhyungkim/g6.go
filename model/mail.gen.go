@@ -20,5 +20,5 @@ type Mail struct {
 
 // TableName Mail's table name
 func (*Mail) TableName() string {
-	return TableNameMail
+	return Prefix + TableNameMail
 }

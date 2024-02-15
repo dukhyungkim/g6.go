@@ -22,5 +22,5 @@ type Content struct {
 
 // TableName Content's table name
 func (*Content) TableName() string {
-	return TableNameContent
+	return Prefix + TableNameContent
 }

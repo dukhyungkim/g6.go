@@ -25,5 +25,5 @@ type MemberSocialProfile struct {
 
 // TableName MemberSocialProfile's table name
 func (*MemberSocialProfile) TableName() string {
-	return TableNameMemberSocialProfile
+	return Prefix + TableNameMemberSocialProfile
 }

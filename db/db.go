@@ -4,7 +4,6 @@ import (
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
-	"gorm.io/gorm/schema"
 	"strings"
 )
 
@@ -26,16 +25,12 @@ type Database struct {
 	*gorm.DB
 }
 
-func NewDB(engine string, prefix string) (*Database, error) {
+func NewDB(engine string) (*Database, error) {
 	var db *gorm.DB
 	var err error
 	switch strings.ToLower(engine) {
 	case EngineSqlite:
-		db, err = gorm.Open(sqlite.Open("sqlite3.db"), &gorm.Config{
-			NamingStrategy: schema.NamingStrategy{
-				TablePrefix: prefix,
-			},
-		})
+		db, err = gorm.Open(sqlite.Open("sqlite3.db"))
 	case EnginePostgres:
 		// TODO
 	case EngineMysql:

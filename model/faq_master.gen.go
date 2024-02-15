@@ -17,5 +17,5 @@ type FaqMaster struct {
 
 // TableName FaqMaster's table name
 func (*FaqMaster) TableName() string {
-	return TableNameFaqMaster
+	return Prefix + TableNameFaqMaster
 }

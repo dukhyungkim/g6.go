@@ -41,5 +41,5 @@ type QaContent struct {
 
 // TableName QaContent's table name
 func (*QaContent) TableName() string {
-	return TableNameQaContent
+	return Prefix + TableNameQaContent
 }

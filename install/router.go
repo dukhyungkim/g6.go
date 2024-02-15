@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/plugin"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/dukhyungkim/gonuboard/version"
@@ -119,8 +120,9 @@ func installDatabase() http.HandlerFunc {
 		}
 		config.IsResponsive = isResponsive
 
+		model.Prefix = form.DBTablePrefix
 		// TODO use db handler
-		_, err = db.NewDB(form.DBEngine, form.DBTablePrefix)
+		_, err = db.NewDB(form.DBEngine)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -232,7 +234,7 @@ func installProcess() http.HandlerFunc {
 
 		form := formCache.Get("form").Value()
 
-		dbConn, err := db.NewDB(form.DBEngine, form.DBTablePrefix)
+		dbConn, err := db.NewDB(form.DBEngine)
 		if err != nil {
 			sendSSE(w, fmt.Sprintf("[error] 설치가 실패했습니다. %v", err))
 			return

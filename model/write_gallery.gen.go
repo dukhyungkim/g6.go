@@ -54,5 +54,5 @@ type WriteGallery struct {
 
 // TableName WriteGallery's table name
 func (*WriteGallery) TableName() string {
-	return TableNameWriteGallery
+	return Prefix + TableNameWriteGallery
 }

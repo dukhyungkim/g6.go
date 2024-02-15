@@ -54,5 +54,5 @@ type WriteNotice struct {
 
 // TableName WriteNotice's table name
 func (*WriteNotice) TableName() string {
-	return TableNameWriteNotice
+	return Prefix + TableNameWriteNotice
 }

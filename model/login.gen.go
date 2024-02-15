@@ -20,5 +20,5 @@ type Login struct {
 
 // TableName Login's table name
 func (*Login) TableName() string {
-	return TableNameLogin
+	return Prefix + TableNameLogin
 }

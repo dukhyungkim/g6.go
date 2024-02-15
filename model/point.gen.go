@@ -26,5 +26,5 @@ type Point struct {
 
 // TableName Point's table name
 func (*Point) TableName() string {
-	return TableNamePoint
+	return Prefix + TableNamePoint
 }

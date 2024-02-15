@@ -23,5 +23,5 @@ type Visit struct {
 
 // TableName Visit's table name
 func (*Visit) TableName() string {
-	return TableNameVisit
+	return Prefix + TableNameVisit
 }

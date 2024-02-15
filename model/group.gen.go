@@ -36,5 +36,5 @@ type Group struct {
 
 // TableName Group's table name
 func (*Group) TableName() string {
-	return TableNameGroup
+	return Prefix + TableNameGroup
 }

@@ -16,5 +16,5 @@ type VisitSum struct {
 
 // TableName VisitSum's table name
 func (*VisitSum) TableName() string {
-	return TableNameVisitSum
+	return Prefix + TableNameVisitSum
 }

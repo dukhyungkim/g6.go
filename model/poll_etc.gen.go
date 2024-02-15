@@ -20,5 +20,5 @@ type PollEtc struct {
 
 // TableName PollEtc's table name
 func (*PollEtc) TableName() string {
-	return TableNamePollEtc
+	return Prefix + TableNamePollEtc
 }

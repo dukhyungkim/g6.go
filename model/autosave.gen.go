@@ -20,5 +20,5 @@ type Autosave struct {
 
 // TableName Autosave's table name
 func (*Autosave) TableName() string {
-	return TableNameAutosave
+	return Prefix + TableNameAutosave
 }

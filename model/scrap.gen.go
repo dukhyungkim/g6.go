@@ -19,5 +19,5 @@ type Scrap struct {
 
 // TableName Scrap's table name
 func (*Scrap) TableName() string {
-	return TableNameScrap
+	return Prefix + TableNameScrap
 }

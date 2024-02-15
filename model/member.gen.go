@@ -67,5 +67,5 @@ type Member struct {
 
 // TableName Member's table name
 func (*Member) TableName() string {
-	return TableNameMember
+	return Prefix + TableNameMember
 }

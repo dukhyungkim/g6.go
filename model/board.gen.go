@@ -106,5 +106,5 @@ type Board struct {
 
 // TableName Board's table name
 func (*Board) TableName() string {
-	return TableNameBoard
+	return Prefix + TableNameBoard
 }

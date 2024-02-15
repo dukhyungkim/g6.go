@@ -15,5 +15,5 @@ type Faq struct {
 
 // TableName Faq's table name
 func (*Faq) TableName() string {
-	return TableNameFaq
+	return Prefix + TableNameFaq
 }

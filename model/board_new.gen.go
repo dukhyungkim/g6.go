@@ -20,5 +20,5 @@ type BoardNew struct {
 
 // TableName BoardNew's table name
 func (*BoardNew) TableName() string {
-	return TableNameBoardNew
+	return Prefix + TableNameBoardNew
 }

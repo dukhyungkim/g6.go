@@ -29,5 +29,5 @@ type BoardFile struct {
 
 // TableName BoardFile's table name
 func (*BoardFile) TableName() string {
-	return TableNameBoardFile
+	return Prefix + TableNameBoardFile
 }

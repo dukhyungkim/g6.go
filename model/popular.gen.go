@@ -18,5 +18,5 @@ type Popular struct {
 
 // TableName Popular's table name
 func (*Popular) TableName() string {
-	return TableNamePopular
+	return Prefix + TableNamePopular
 }

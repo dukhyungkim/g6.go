@@ -165,5 +165,5 @@ type Config struct {
 
 // TableName Config's table name
 func (*Config) TableName() string {
-	return TableNameConfig
+	return Prefix + TableNameConfig
 }
