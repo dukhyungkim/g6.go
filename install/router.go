@@ -236,7 +236,7 @@ func installProcess() http.HandlerFunc {
 
 		dbConn, err := db.NewDB(form.DBEngine)
 		if err != nil {
-			sendSSE(w, fmt.Sprintf("[error] 설치가 실패했습니다. %v", err))
+			sendSSE(w, failedInstallMessage(err))
 			return
 		}
 		sendSSE(w, "데이터베이스 연결 완료")
@@ -248,12 +248,17 @@ func installProcess() http.HandlerFunc {
 
 		err = dbConn.MigrateTables()
 		if err != nil {
-			sendSSE(w, fmt.Sprintf("[error] 설치가 실패했습니다. %v", err))
+			sendSSE(w, failedInstallMessage(err))
 			return
 		}
 		sendSSE(w, "데이터베이스 테이블 생성 완료")
 
-		// TODO setup admin
+		err = setupConfig(dbConn, form.AdminId, form.AdminEmail)
+		if err != nil {
+			sendSSE(w, failedInstallMessage(err))
+			return
+		}
+		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
 		// TODO creat boards
@@ -264,6 +269,36 @@ func installProcess() http.HandlerFunc {
 
 		sendSSE(w, fmt.Sprintf("[success] 축하합니다. %s 설치가 완료되었습니다.", version.Version))
 	}
+}
+
+func setupConfig(dbConn *db.Database, adminId, adminEmail string) error {
+	var exists bool
+	err := dbConn.Model(&model.Config{}).
+		Select("count(*) > 0").
+		Where("cf_id = 1").
+		Find(&exists).
+		Error
+	if err != nil {
+		return err
+	}
+
+	if !exists {
+		// TODO save with default config
+		err = dbConn.Select("cf_admin", "cf_admin_email").
+			Create(&model.Config{
+				CfAdmin:      &adminId,
+				CfAdminEmail: &adminEmail,
+			}).
+			Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func failedInstallMessage(err error) string {
+	return fmt.Sprintf("[error] 설치가 실패했습니다. %v", err)
 }
 
 func setSSEHeader(w http.ResponseWriter) {
