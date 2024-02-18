@@ -3,5 +3,6 @@
 /gonuboard*
 .env
 sqlite3.db
+sqlite3.db-journal
 plugin_states.json
 plugin_states.json.lock

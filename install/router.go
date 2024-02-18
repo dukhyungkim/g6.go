@@ -283,13 +283,11 @@ func setupConfig(dbConn *db.Database, adminId, adminEmail string) error {
 	}
 
 	if !exists {
-		// TODO save with default config
-		err = dbConn.Select("cf_admin", "cf_admin_email").
-			Create(&model.Config{
-				CfAdmin:      &adminId,
-				CfAdminEmail: &adminEmail,
-			}).
-			Error
+		adminConfig := defaultConfig
+		adminConfig.CfAdmin = adminId
+		adminConfig.CfAdminEmail = adminEmail
+
+		err = dbConn.Create(&adminConfig).Error
 		if err != nil {
 			return err
 		}

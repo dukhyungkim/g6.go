@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 func init() {
 	defaultCtx := gonja.DefaultContext
-	defaultCtx.Set("default_version", "Go누보드6.0.0")
+	defaultCtx.Set("default_version", version.Version)
 	defaultCtx.Set("theme_asset", themeAsset)
 	defaultCtx.Set("url_for", urlFor)
 }
