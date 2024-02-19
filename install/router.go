@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/plugin"
 	"github.com/dukhyungkim/gonuboard/util"
@@ -12,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nikolalohinski/gonja/v2/exec"
+	"gorm.io/gorm"
 	"io"
 	"net/http"
 	"os"
@@ -258,6 +260,11 @@ func installProcess() http.HandlerFunc {
 			sendSSE(w, failedInstallMessage(err))
 			return
 		}
+		err = setupAdminMember(dbConn, form.AdminId, form.AdminName, form.AdminPassword, form.AdminEmail)
+		if err != nil {
+			sendSSE(w, failedInstallMessage(err))
+			return
+		}
 		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
@@ -293,6 +300,31 @@ func setupConfig(dbConn *db.Database, adminId, adminEmail string) error {
 		}
 	}
 	return nil
+}
+
+func setupAdminMember(dbConn *db.Database, adminId string, adminName string, adminPassword string, adminEmail string) error {
+	var adminMember model.Member
+	err := dbConn.
+		Where("mb_id = ?", adminId).
+		First(&adminMember).
+		Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			newAdminMember := defaultMember
+			newAdminMember.MbID = adminId
+			newAdminMember.MbPassword = lib.CreateHash(adminPassword)
+			newAdminMember.MbName = adminName
+			newAdminMember.MbNick = adminName
+			newAdminMember.MbEmail = adminEmail
+			return dbConn.Create(&newAdminMember).Error
+		}
+		return err
+	}
+
+	adminMember.MbPassword = lib.CreateHash(adminPassword)
+	adminMember.MbName = adminName
+	adminMember.MbEmail = adminEmail
+	return dbConn.Save(&adminMember).Error
 }
 
 func failedInstallMessage(err error) string {

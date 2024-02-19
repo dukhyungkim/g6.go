@@ -4,6 +4,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/version"
 	"path"
+	"time"
 )
 
 var (
@@ -79,5 +80,14 @@ var (
 		CfCaptchaMp3:        "basic",
 		CfEditor:            "ckeditor4",
 		CfCertLimit:         2,
+	}
+	defaultMember = model.Member{
+		MbLevel:        10,
+		MbMailling:     1,
+		MbOpen:         1,
+		MbNickDate:     time.Now(),
+		MbEmailCertify: time.Now(),
+		MbDatetime:     time.Now(),
+		MbIP:           "127.0.0.1",
 	}
 )

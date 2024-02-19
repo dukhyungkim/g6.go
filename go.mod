@@ -9,6 +9,7 @@ require (
 	github.com/jellydator/ttlcache/v3 v3.1.1
 	github.com/joho/godotenv v1.5.1
 	github.com/nikolalohinski/gonja/v2 v2.1.5
+	golang.org/x/crypto v0.18.0
 	gorm.io/gorm v1.25.7
 )
 
