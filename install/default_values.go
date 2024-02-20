@@ -90,4 +90,30 @@ var (
 		MbDatetime:     time.Now(),
 		MbIP:           "127.0.0.1",
 	}
+	defaultContents = []*model.Content{
+		{
+			CoID:         "company",
+			CoHTML:       1,
+			CoSubject:    "회사소개",
+			CoContent:    "<p align=center><b>회사소개에 대한 내용을 입력하십시오.</b></p>",
+			CoSkin:       "basic",
+			CoMobileSkin: "basic",
+		},
+		{
+			CoID:         "provision",
+			CoHTML:       1,
+			CoSubject:    "서비스 이용약관",
+			CoContent:    "<p align=center><b>서비스 이용약관에 대한 내용을 입력하십시오.</b></p>",
+			CoSkin:       "basic",
+			CoMobileSkin: "basic",
+		},
+		{
+			CoID:         "privacy",
+			CoHTML:       1,
+			CoSubject:    "개인정보 처리방침",
+			CoContent:    "<p align=center><b>개인정보 처리방침에 대한 내용을 입력하십시오.</b></p>",
+			CoSkin:       "basic",
+			CoMobileSkin: "basic",
+		},
+	}
 )

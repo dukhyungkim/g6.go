@@ -14,6 +14,7 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"io"
 	"net/http"
 	"os"
@@ -265,6 +266,7 @@ func installProcess() http.HandlerFunc {
 			sendSSE(w, failedInstallMessage(err))
 			return
 		}
+		err = setupContent(dbConn)
 		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
@@ -325,6 +327,10 @@ func setupAdminMember(dbConn *db.Database, adminId string, adminName string, adm
 	adminMember.MbName = adminName
 	adminMember.MbEmail = adminEmail
 	return dbConn.Save(&adminMember).Error
+}
+
+func setupContent(dbConn *db.Database) error {
+	return dbConn.Clauses(clause.OnConflict{DoNothing: true}).Create(defaultContents).Error
 }
 
 func failedInstallMessage(err error) string {
