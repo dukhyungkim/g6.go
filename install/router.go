@@ -267,6 +267,10 @@ func installProcess() http.HandlerFunc {
 			return
 		}
 		err = setupContent(dbConn)
+		if err != nil {
+			sendSSE(w, failedInstallMessage(err))
+			return
+		}
 		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
