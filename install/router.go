@@ -271,6 +271,11 @@ func installProcess() http.HandlerFunc {
 			sendSSE(w, failedInstallMessage(err))
 			return
 		}
+		err = setupQA(dbConn)
+		if err != nil {
+			sendSSE(w, failedInstallMessage(err))
+			return
+		}
 		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
@@ -335,6 +340,18 @@ func setupAdminMember(dbConn *db.Database, adminId string, adminName string, adm
 
 func setupContent(dbConn *db.Database) error {
 	return dbConn.Clauses(clause.OnConflict{DoNothing: true}).Create(defaultContents).Error
+}
+
+func setupQA(dbConn *db.Database) error {
+	err := dbConn.First(&model.QaConfig{}).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			dbConn.Create(&defaultQAConfig)
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func failedInstallMessage(err error) string {

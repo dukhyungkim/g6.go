@@ -116,4 +116,22 @@ var (
 			CoMobileSkin: "basic",
 		},
 	}
+	defaultQAConfig = model.QaConfig{
+		QaTitle:            "1:1문의",
+		QaCategory:         "회원|포인트",
+		QaSkin:             "basic",
+		QaMobileSkin:       "basic",
+		QaUseEmail:         1,
+		QaReqEmail:         0,
+		QaUseHp:            1,
+		QaReqHp:            0,
+		QaUseEditor:        1,
+		QaSubjectLen:       60,
+		QaMobileSubjectLen: 30,
+		QaPageRows:         15,
+		QaMobilePageRows:   15,
+		QaImageWidth:       600,
+		QaUploadSize:       1048576,
+		QaInsertContent:    "",
+	}
 )
