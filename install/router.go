@@ -14,7 +14,6 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"io"
 	"net/http"
 	"os"
@@ -276,6 +275,11 @@ func installProcess() http.HandlerFunc {
 			sendSSE(w, failedInstallMessage(err))
 			return
 		}
+		err = setupBoardGroup(dbConn)
+		if err != nil {
+			sendSSE(w, failedInstallMessage(err))
+			return
+		}
 		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
@@ -339,19 +343,22 @@ func setupAdminMember(dbConn *db.Database, adminId string, adminName string, adm
 }
 
 func setupContent(dbConn *db.Database) error {
-	return dbConn.Clauses(clause.OnConflict{DoNothing: true}).Create(defaultContents).Error
+	var err error
+	for _, content := range defaultContents {
+		err = dbConn.Where("co_id = ?", content.CoID).FirstOrCreate(&content).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func setupQA(dbConn *db.Database) error {
-	err := dbConn.First(&model.QaConfig{}).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			dbConn.Create(&defaultQAConfig)
-			return nil
-		}
-		return err
-	}
-	return nil
+	return dbConn.FirstOrCreate(&defaultQAConfig).Error
+}
+
+func setupBoardGroup(dbConn *db.Database) error {
+	return dbConn.FirstOrCreate(&defaultGroup).Error
 }
 
 func failedInstallMessage(err error) string {

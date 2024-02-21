@@ -1,0 +1,44 @@
+package model
+
+const TableNameGroup = "group"
+
+const (
+	DeviceBoth = "both"
+	DevicePC   = "pc"
+	Device     = "mobile"
+)
+
+// Group mapped from table <group>
+type Group struct {
+	GrID        string `gorm:"type:VARCHAR(10);primaryKey;not null;"`
+	GrSubject   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	GrDevice    string `gorm:"type:VARCHAR(6);not null;default:both"`
+	GrAdmin     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	GrUseAccess int    `gorm:"type:INTEGER;not null;default:0"`
+	GrOrder     int    `gorm:"type:INTEGER;not null;default:0"`
+	Gr1Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr2Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr3Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr4Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr5Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr6Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr7Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr8Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr9Subj     string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr10Subj    string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr1         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr2         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr3         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr4         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr5         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr6         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr7         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr8         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr9         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Gr10        string `gorm:"type:VARCHAR(255);not null;default:''"`
+}
+
+// TableName Group's table name
+func (*Group) TableName() string {
+	return Prefix + TableNameGroup
+}

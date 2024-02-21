@@ -90,7 +90,7 @@ var (
 		MbDatetime:     time.Now(),
 		MbIP:           "127.0.0.1",
 	}
-	defaultContents = []*model.Content{
+	defaultContents = []model.Content{
 		{
 			CoID:         "company",
 			CoHTML:       1,
@@ -133,5 +133,9 @@ var (
 		QaImageWidth:       600,
 		QaUploadSize:       1048576,
 		QaInsertContent:    "",
+	}
+	defaultGroup = model.Group{
+		GrID:      defaultGrId,
+		GrSubject: "커뮤니티",
 	}
 )
