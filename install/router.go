@@ -255,32 +255,11 @@ func installProcess() http.HandlerFunc {
 		}
 		sendSSE(w, "데이터베이스 테이블 생성 완료")
 
-		err = setupConfig(dbConn, form.AdminId, form.AdminEmail)
+		err = setupDefaultInformation(dbConn, form)
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
 			return
 		}
-		err = setupAdminMember(dbConn, form.AdminId, form.AdminName, form.AdminPassword, form.AdminEmail)
-		if err != nil {
-			sendSSE(w, failedInstallMessage(err))
-			return
-		}
-		err = setupContent(dbConn)
-		if err != nil {
-			sendSSE(w, failedInstallMessage(err))
-			return
-		}
-		err = setupQA(dbConn)
-		if err != nil {
-			sendSSE(w, failedInstallMessage(err))
-			return
-		}
-		err = setupBoardGroup(dbConn)
-		if err != nil {
-			sendSSE(w, failedInstallMessage(err))
-			return
-		}
-		// TODO setup default config
 		sendSSE(w, "기본설정 정보 입력 완료")
 
 		// TODO creat boards
@@ -291,6 +270,36 @@ func installProcess() http.HandlerFunc {
 
 		sendSSE(w, fmt.Sprintf("[success] 축하합니다. %s 설치가 완료되었습니다.", version.Version))
 	}
+}
+
+func setupDefaultInformation(dbConn *db.Database, form *installForm) error {
+	err := setupConfig(dbConn, form.AdminId, form.AdminEmail)
+	if err != nil {
+		return err
+	}
+
+	err = setupAdminMember(dbConn, form.AdminId, form.AdminName, form.AdminPassword, form.AdminEmail)
+	if err != nil {
+		return err
+	}
+
+	err = setupContent(dbConn)
+	if err != nil {
+		return err
+	}
+
+	err = setupQA(dbConn)
+	if err != nil {
+		return err
+	}
+
+	err = setupBoardGroup(dbConn)
+	if err != nil {
+		return err
+	}
+
+	// TODO setup default config
+	return nil
 }
 
 func setupConfig(dbConn *db.Database, adminId, adminEmail string) error {
