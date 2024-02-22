@@ -134,6 +134,10 @@ var (
 		QaUploadSize:       1048576,
 		QaInsertContent:    "",
 	}
+	defaultFaqMaster = model.FaqMaster{
+		FmID:      1,
+		FmSubject: "자주하시는 질문",
+	}
 	defaultGroup = model.Group{
 		GrID:      defaultGrId,
 		GrSubject: "커뮤니티",

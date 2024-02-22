@@ -293,6 +293,11 @@ func setupDefaultInformation(dbConn *db.Database, form *installForm) error {
 		return err
 	}
 
+	err = setupFaqMaster(dbConn)
+	if err != nil {
+		return err
+	}
+
 	err = setupBoardGroup(dbConn)
 	if err != nil {
 		return err
@@ -364,6 +369,10 @@ func setupContent(dbConn *db.Database) error {
 
 func setupQA(dbConn *db.Database) error {
 	return dbConn.FirstOrCreate(&defaultQAConfig).Error
+}
+
+func setupFaqMaster(dbConn *db.Database) error {
+	return dbConn.FirstOrCreate(&defaultFaqMaster).Error
 }
 
 func setupBoardGroup(dbConn *db.Database) error {
