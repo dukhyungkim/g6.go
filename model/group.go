@@ -2,12 +2,6 @@ package model
 
 const TableNameGroup = "group"
 
-const (
-	DeviceBoth = "both"
-	DevicePC   = "pc"
-	Device     = "mobile"
-)
-
 // Group mapped from table <group>
 type Group struct {
 	GrID        string `gorm:"type:VARCHAR(10);primaryKey;not null;"`

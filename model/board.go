@@ -1,0 +1,109 @@
+package model
+
+const TableNameBoard = "board"
+
+// Board mapped from table <board>
+type Board struct {
+	BoTable               string `gorm:"type:VARCHAR(20);primaryKey;not null"`
+	GrID                  string
+	Group                 Group  `gorm:"foreignKey:GrID;not null;default:''"`
+	BoSubject             string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoMobileSubject       string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoDevice              string `gorm:"type:VARCHAR(6);not null;default:both"`
+	BoAdmin               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoListLevel           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoReadLevel           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoWriteLevel          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoReplyLevel          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCommentLevel        int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUploadLevel         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoDownloadLevel       int    `gorm:"type:INTEGER;not null;default:0"`
+	BoHTMLLevel           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoLinkLevel           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCountDelete         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCountModify         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoReadPoint           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoWritePoint          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCommentPoint        int    `gorm:"type:INTEGER;not null;default:0"`
+	BoDownloadPoint       int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseCategory         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCategoryList        string `gorm:"type:TEXT;not null;default:''"`
+	BoUseSideview         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseFileContent      int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseSecret           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseDhtmlEditor      int    `gorm:"type:INTEGER;not null;default:0"`
+	BoSelectEditor        string `gorm:"type:VARCHAR(50);not null;default:''"`
+	BoUseRssView          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseGood             int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseNogood           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseName             int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseSignature        int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseIPView           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseListView         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseListFile         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseListContent      int    `gorm:"type:INTEGER;not null;default:0"`
+	BoTableWidth          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoSubjectLen          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoMobileSubjectLen    int    `gorm:"type:INTEGER;not null;default:0"`
+	BoPageRows            int    `gorm:"type:INTEGER;not null;default:0"`
+	BoMobilePageRows      int    `gorm:"type:INTEGER;not null;default:0"`
+	BoNew                 int    `gorm:"type:INTEGER;not null;default:0"`
+	BoHot                 int    `gorm:"type:INTEGER;not null;default:0"`
+	BoImageWidth          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoSkin                string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoMobileSkin          string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoIncludeHead         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoIncludeTail         string `gorm:"type:VARCHAR(255);not null;default:''"`
+	BoContentHead         string `gorm:"type:TEXT;not null;default:''"`
+	BoMobileContentHead   string `gorm:"type:TEXT;not null;default:''"`
+	BoContentTail         string `gorm:"type:TEXT;not null;default:''"`
+	BoMobileContentTail   string `gorm:"type:TEXT;not null;default:''"`
+	BoInsertContent       string `gorm:"type:TEXT;not null;default:''"`
+	BoGalleryCols         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoGalleryWidth        int    `gorm:"type:INTEGER;not null;default:0"`
+	BoGalleryHeight       int    `gorm:"type:INTEGER;not null;default:0"`
+	BoMobileGalleryWidth  int    `gorm:"type:INTEGER;not null;default:0"`
+	BoMobileGalleryHeight int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUploadSize          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoReplyOrder          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseSearch           int    `gorm:"type:INTEGER;not null;default:0"`
+	BoOrder               int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCountWrite          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCountComment        int    `gorm:"type:INTEGER;not null;default:0"`
+	BoWriteMin            int    `gorm:"type:INTEGER;not null;default:0"`
+	BoWriteMax            int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCommentMin          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoCommentMax          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoNotice              string `gorm:"type:TEXT;not null;default:''"`
+	BoUploadCount         int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseEmail            int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseCert             string `gorm:"type:VARCHAR(8);not null;default:''"`
+	BoUseSns              int    `gorm:"type:INTEGER;not null;default:0"`
+	BoUseCaptcha          int    `gorm:"type:INTEGER;not null;default:0"`
+	BoSortField           string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo1Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo2Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo3Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo4Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo5Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo6Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo7Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo8Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo9Subj               string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo10Subj              string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo1                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo2                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo3                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo4                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo5                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo6                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo7                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo8                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo9                   string `gorm:"type:VARCHAR(255);not null;default:''"`
+	Bo10                  string `gorm:"type:VARCHAR(255);not null;default:''"`
+}
+
+// TableName Board's table name
+func (*Board) TableName() string {
+	return Prefix + TableNameBoard
+}

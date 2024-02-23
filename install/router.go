@@ -303,6 +303,11 @@ func setupDefaultInformation(dbConn *db.Database, form *installForm) error {
 		return err
 	}
 
+	err = setupBoard(dbConn)
+	if err != nil {
+		return err
+	}
+
 	// TODO setup default config
 	return nil
 }
@@ -377,6 +382,23 @@ func setupFaqMaster(dbConn *db.Database) error {
 
 func setupBoardGroup(dbConn *db.Database) error {
 	return dbConn.FirstOrCreate(&defaultGroup).Error
+}
+
+func setupBoard(dbConn *db.Database) error {
+	var err error
+	for _, defaultBoard := range defaultBoards {
+		board := defaultBoardData
+		board.BoTable = defaultBoard.BoTable
+		board.BoSubject = defaultBoard.BoSubject
+		board.BoSkin = defaultBoard.BoSkin
+		board.BoMobileSkin = defaultBoard.BoMobileSkin
+
+		err = dbConn.FirstOrCreate(&board).Error
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func failedInstallMessage(err error) string {
