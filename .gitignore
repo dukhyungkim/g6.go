@@ -2,6 +2,8 @@
 .DS_Store
 /gonuboard*
 .env
+
+data/
 sqlite3.db
 sqlite3.db-journal
 plugin_states.json

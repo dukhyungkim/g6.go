@@ -265,11 +265,42 @@ func installProcess() http.HandlerFunc {
 		// TODO creat boards
 		sendSSE(w, "게시판 테이블 생성 완료")
 
-		// TODO create data path
+		err = setupDataDirectory()
+		if err != nil {
+			sendSSE(w, failedInstallMessage(err))
+			return
+		}
 		sendSSE(w, "데이터 경로 생성 완료")
 
 		sendSSE(w, fmt.Sprintf("[success] 축하합니다. %s 설치가 완료되었습니다.", version.Version))
 	}
+}
+
+func setupDataDirectory() error {
+	const defaultPerm = 0755
+
+	fmt.Println(defaultDataDirectory)
+	err := os.MkdirAll(defaultDataDirectory, defaultPerm)
+	if err != nil {
+		if !os.IsExist(err) {
+			return err
+		}
+	}
+
+	fmt.Println(defaultCacheDirectory)
+	err = os.MkdirAll(defaultCacheDirectory, defaultPerm)
+	if err != nil {
+		if os.IsExist(err) {
+			err = os.RemoveAll(defaultCacheDirectory)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func setupDefaultInformation(dbConn *db.Database, form *installForm) error {
@@ -308,7 +339,6 @@ func setupDefaultInformation(dbConn *db.Database, form *installForm) error {
 		return err
 	}
 
-	// TODO setup default config
 	return nil
 }
 
