@@ -74,9 +74,5 @@ func (db *Database) MigrateTables() error {
 		&model.Uniqid{},
 		&model.Visit{},
 		&model.VisitSum{},
-		&model.WriteFree{},
-		&model.WriteGallery{},
-		&model.WriteNotice{},
-		&model.WriteQa{},
 	)
 }

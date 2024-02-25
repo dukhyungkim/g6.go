@@ -262,7 +262,13 @@ func installProcess() http.HandlerFunc {
 		}
 		sendSSE(w, "기본설정 정보 입력 완료")
 
-		// TODO creat boards
+		for _, board := range defaultBoards {
+			err = createDynamicWriteTable(dbConn, board.BoTable)
+			if err != nil {
+				sendSSE(w, failedInstallMessage(err))
+				return
+			}
+		}
 		sendSSE(w, "게시판 테이블 생성 완료")
 
 		err = setupDataDirectory()
@@ -428,6 +434,30 @@ func setupBoard(dbConn *db.Database) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func createDynamicWriteTable(dbConn *db.Database, tableName string) error {
+	writeTable := model.NewWriteTable(tableName)
+	err := dbConn.Table(writeTable.TableName()).AutoMigrate(writeTable)
+	if err != nil {
+		return err
+	}
+
+	const numReplyIndex = "idx_wr_num_reply"
+	newNumReplyIndex := fmt.Sprintf("%s_%s", numReplyIndex, tableName)
+	err = dbConn.Table(writeTable.TableName()).Migrator().RenameIndex(writeTable, numReplyIndex, newNumReplyIndex)
+	if err != nil {
+		return err
+	}
+
+	const commentIndex = "idx_wr_is_comment"
+	newCommentIndex := fmt.Sprintf("%s_%s", commentIndex, tableName)
+	err = dbConn.Table(writeTable.TableName()).Migrator().RenameIndex(writeTable, commentIndex, newCommentIndex)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
