@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -181,6 +182,11 @@ func parseInstallForm(r *http.Request) (*installForm, error) {
 		return nil, err
 	}
 
+	var reinstall bool
+	if r.FormValue("reinstall") == "1" {
+		reinstall = true
+	}
+
 	return &installForm{
 		DBEngine:      engine,
 		DBHost:        r.FormValue("db_host"),
@@ -193,7 +199,7 @@ func parseInstallForm(r *http.Request) (*installForm, error) {
 		AdminPassword: r.FormValue("admin_password"),
 		AdminName:     r.FormValue("admin_name"),
 		AdminEmail:    r.FormValue("admin_email"),
-		Reinstall:     false,
+		Reinstall:     reinstall,
 	}, nil
 }
 
@@ -244,7 +250,21 @@ func installProcess() http.HandlerFunc {
 		sendSSE(w, "데이터베이스 연결 완료")
 
 		if form.Reinstall {
-			// TODO reinstall
+			tables, err := dbConn.ListAllTables(form.DBEngine)
+			if err != nil {
+				sendSSE(w, failedInstallMessage(err))
+				return
+			}
+			targetPrefix := model.Prefix + model.WriteTablePrefix
+			for _, table := range tables {
+				if strings.HasPrefix(table, targetPrefix) {
+					err = dbConn.Migrator().DropTable(table)
+					if err != nil {
+						sendSSE(w, failedInstallMessage(err))
+						return
+					}
+				}
+			}
 			sendSSE(w, "기존 데이터베이스 테이블 삭제 완료")
 		}
 
@@ -349,17 +369,16 @@ func setupDefaultInformation(dbConn *db.Database, form *installForm) error {
 }
 
 func setupConfig(dbConn *db.Database, adminId, adminEmail string) error {
-	var exists bool
+	var count int64
 	err := dbConn.Model(&model.Config{}).
-		Select("count(*) > 0").
 		Where("cf_id = 1").
-		Find(&exists).
+		Count(&count).
 		Error
 	if err != nil {
 		return err
 	}
 
-	if !exists {
+	if count == 0 {
 		adminConfig := defaultConfig
 		adminConfig.CfAdmin = adminId
 		adminConfig.CfAdminEmail = adminEmail

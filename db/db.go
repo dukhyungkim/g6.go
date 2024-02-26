@@ -76,3 +76,32 @@ func (db *Database) MigrateTables() error {
 		&model.VisitSum{},
 	)
 }
+
+func (db *Database) ListAllTables(engine string) ([]string, error) {
+	var query string
+	switch engine {
+	case EngineSqlite:
+		query = sqliteTablesQuery()
+	case EngineMysql:
+		// TODO
+	case EnginePostgres:
+		// TODO
+	}
+
+	var tableNames []string
+	err := db.Raw(query).Scan(&tableNames).Error
+	if err != nil {
+		return nil, err
+	}
+	return tableNames, nil
+}
+
+func sqliteTablesQuery() string {
+	return `SELECT
+    name
+FROM
+    sqlite_master
+WHERE
+    type ='table' AND
+    name NOT LIKE 'sqlite_%'`
+}
