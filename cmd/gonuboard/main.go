@@ -78,7 +78,7 @@ func loadEnv() error {
 	err := godotenv.Load()
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			config.NeedInstall = true
+			config.NotExistENV = true
 		} else {
 			return err
 		}

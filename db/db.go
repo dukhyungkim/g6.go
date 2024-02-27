@@ -23,6 +23,7 @@ func IsSupportedEngines(engine string) bool {
 
 type Database struct {
 	*gorm.DB
+	engine string
 }
 
 func NewDB(engine string) (*Database, error) {
@@ -40,7 +41,10 @@ func NewDB(engine string) (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{DB: db}, nil
+	return &Database{
+		DB:     db,
+		engine: engine,
+	}, nil
 }
 
 func (db *Database) MigrateTables() error {
@@ -77,9 +81,9 @@ func (db *Database) MigrateTables() error {
 	)
 }
 
-func (db *Database) ListAllTables(engine string) ([]string, error) {
+func (db *Database) ListAllTables() ([]string, error) {
 	var query string
-	switch engine {
+	switch db.engine {
 	case EngineSqlite:
 		query = sqliteTablesQuery()
 	case EngineMysql:
@@ -96,12 +100,21 @@ func (db *Database) ListAllTables(engine string) ([]string, error) {
 	return tableNames, nil
 }
 
-func sqliteTablesQuery() string {
-	return `SELECT
-    name
-FROM
-    sqlite_master
-WHERE
-    type ='table' AND
-    name NOT LIKE 'sqlite_%'`
+func (db *Database) HasTable(tableName string) (bool, error) {
+	var query string
+	switch db.engine {
+	case EngineSqlite:
+		query = sqliteHasTableQuery(tableName)
+	case EngineMysql:
+		// TODO
+	case EnginePostgres:
+		// TODO
+	}
+
+	var count int64
+	err := db.Raw(query).Scan(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count == 1, nil
 }

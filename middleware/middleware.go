@@ -18,11 +18,23 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		request := r.Context().Value(KeyRequest).(util.Request)
 
+		//engine := os.Getenv("DB_ENGINE")
+		//dbConn, err := db.NewDB(engine)
+		//if err != nil {
+		//	fmt.Println("TODO print new db error")
+		//	return
+		//}
+
 		if !strings.HasPrefix(r.URL.Path, "/install") {
-			if config.NeedInstall {
-				renderAlertTemplate(w, request)
+			if config.NotExistENV {
+				renderAlertTemplate(w, request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
 				return
 			}
+
+			// TODO check config table
+		} else {
+			next.ServeHTTP(w, r)
+			return
 		}
 
 		next.ServeHTTP(w, r)
@@ -38,13 +50,13 @@ func shouldRunMiddleware(path string) bool {
 	return true
 }
 
-func renderAlertTemplate(w http.ResponseWriter, request util.Request) {
-	tpl, err := util.AlertTemplate(request, ".env 파일이 없습니다. 설치를 진행해 주세요.", "/install")
+func renderAlertTemplate(w http.ResponseWriter, request util.Request, message string, statusCode int, url string) {
+	tpl, err := util.AlertTemplate(request, message, url)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusBadRequest)
+	w.WriteHeader(statusCode)
 	_, _ = w.Write(tpl)
 }
 

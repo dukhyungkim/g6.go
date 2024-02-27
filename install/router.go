@@ -250,7 +250,7 @@ func installProcess() http.HandlerFunc {
 		sendSSE(w, "데이터베이스 연결 완료")
 
 		if form.Reinstall {
-			tables, err := dbConn.ListAllTables(form.DBEngine)
+			tables, err := dbConn.ListAllTables()
 			if err != nil {
 				sendSSE(w, failedInstallMessage(err))
 				return
