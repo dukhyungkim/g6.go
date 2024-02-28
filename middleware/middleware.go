@@ -3,9 +3,12 @@ package middleware
 import (
 	"context"
 	"github.com/dukhyungkim/gonuboard/config"
+	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/util"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -18,12 +21,12 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		request := r.Context().Value(KeyRequest).(util.Request)
 
-		//engine := os.Getenv("DB_ENGINE")
-		//dbConn, err := db.NewDB(engine)
-		//if err != nil {
-		//	fmt.Println("TODO print new db error")
-		//	return
-		//}
+		engine := os.Getenv("DB_ENGINE")
+		dbConn, err := db.NewDB(engine)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		if !strings.HasPrefix(r.URL.Path, "/install") {
 			if config.NotExistENV {
@@ -31,7 +34,15 @@ func MainMiddleware(next http.Handler) http.Handler {
 				return
 			}
 
-			// TODO check config table
+			ok, err := dbConn.HasTable(model.Prefix + "config")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if !ok {
+				renderAlertTemplate(w, request, "DB 또는 테이블이 존재하지 않습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
+				return
+			}
 		} else {
 			next.ServeHTTP(w, r)
 			return
@@ -89,4 +100,5 @@ func setUrlMapForInstall(r *http.Request) {
 	util.UrlMap.Store("install_license", installURL+"/license")
 	util.UrlMap.Store("install_form", installURL+"/form")
 	util.UrlMap.Store("install", installURL)
+	util.UrlMap.Store("index", "/")
 }

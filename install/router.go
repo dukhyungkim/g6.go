@@ -305,7 +305,6 @@ func installProcess() http.HandlerFunc {
 func setupDataDirectory() error {
 	const defaultPerm = 0755
 
-	fmt.Println(defaultDataDirectory)
 	err := os.MkdirAll(defaultDataDirectory, defaultPerm)
 	if err != nil {
 		if !os.IsExist(err) {
@@ -313,7 +312,6 @@ func setupDataDirectory() error {
 		}
 	}
 
-	fmt.Println(defaultCacheDirectory)
 	err = os.MkdirAll(defaultCacheDirectory, defaultPerm)
 	if err != nil {
 		if os.IsExist(err) {
