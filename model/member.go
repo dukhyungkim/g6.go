@@ -67,3 +67,11 @@ type Member struct {
 func (*Member) TableName() string {
 	return Prefix + TableNameMember
 }
+
+func (m *Member) IsInterceptOrLeave() bool {
+	if m.MbID == "" {
+		return false
+	}
+
+	return m.MbLeaveDate != "" || m.MbInterceptDate != ""
+}

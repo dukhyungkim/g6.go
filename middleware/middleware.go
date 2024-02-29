@@ -4,7 +4,9 @@ import (
 	"context"
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/model"
+	"github.com/dukhyungkim/gonuboard/service"
 	"github.com/dukhyungkim/gonuboard/util"
 	"net/http"
 	"net/url"
@@ -46,6 +48,40 @@ func MainMiddleware(next http.Handler) http.Handler {
 		} else {
 			next.ServeHTTP(w, r)
 			return
+		}
+
+		cfg := model.Config{}
+		if dbConn.Take(&cfg).Error != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		request.State.Config = cfg
+		request.State.Title = cfg.CfTitle
+
+		request.State.Editor = cfg.CfEditor
+		request.State.UseEditor = false
+		if cfg.CfEditor != "" {
+			request.State.UseEditor = true
+		}
+
+		request.State.CookieDomain = os.Getenv("COOKIE_DOMAIN")
+
+		sessionMbId := request.Session["ss_mb_id"]
+		cookieMbId := request.Cookies["ck_mb_id"]
+		currentIp := lib.GetClientIp(r)
+
+		if sessionMbId != "" {
+			memberService := service.NewMemberService(dbConn)
+			member, err := memberService.CreateById(sessionMbId)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if member.IsInterceptOrLeave() {
+				request.Session = make(map[string]string)
+			}
+		} else if cookieMbId != "" {
+			// TODO
 		}
 
 		next.ServeHTTP(w, r)
