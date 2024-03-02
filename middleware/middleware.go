@@ -11,8 +11,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 )
+
+var mbIdChecker = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 func MainMiddleware(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
@@ -66,12 +69,13 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		request.State.CookieDomain = os.Getenv("COOKIE_DOMAIN")
 
+		isAutoLogin := false
 		sessionMbId := request.Session["ss_mb_id"]
 		cookieMbId := request.Cookies["ck_mb_id"]
-		currentIp := lib.GetClientIp(r)
+		clientIp := lib.GetClientIp(r)
 
+		memberService := service.NewMemberService(dbConn)
 		if sessionMbId != "" {
-			memberService := service.NewMemberService(dbConn)
 			member, err := memberService.CreateById(sessionMbId)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -81,7 +85,21 @@ func MainMiddleware(next http.Handler) http.Handler {
 				request.Session = make(map[string]string)
 			}
 		} else if cookieMbId != "" {
-			// TODO
+			mbId := mbIdChecker.ReplaceAllString(cookieMbId, "")
+			member, err := memberService.CreateById(mbId)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			if !lib.IsSuperAdmin(request, mbId) &&
+				member.IsEmailCertify(cfg.CfUseEmailCertify == 1) &&
+				member.IsInterceptOrLeave() {
+				ssMbKey := lib.SessionMemberKey(r, member)
+				if request.Cookies["ck_auto"] == ssMbKey {
+					request.Session["ss_mb_id"] = cookieMbId
+					isAutoLogin = true
+				}
+			}
 		}
 
 		next.ServeHTTP(w, r)

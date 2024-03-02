@@ -1,10 +1,15 @@
 package lib
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/model"
+	"github.com/dukhyungkim/gonuboard/util"
 	"net/http"
+	"strings"
+	"time"
 )
 
 func CreateDynamicWriteTable(dbConn *db.Database, tableName string) error {
@@ -36,4 +41,31 @@ func GetClientIp(r *http.Request) string {
 		return clientIp
 	}
 	return r.RemoteAddr
+}
+
+func IsSuperAdmin(request util.Request, mbId string) bool {
+	cfg := request.State.Config
+	cfAdmin := strings.TrimSpace(strings.ToLower(cfg.CfAdmin))
+
+	if cfAdmin == "" {
+		return false
+	}
+
+	if mbId == "" {
+		mbId = request.Session["ss_mb_id"]
+	}
+
+	lowerMbId := strings.TrimSpace(strings.ToLower(mbId))
+	if mbId != "" && lowerMbId == cfAdmin {
+		return true
+	}
+	return false
+}
+
+func SessionMemberKey(r *http.Request, member *model.Member) string {
+	ssMbKeyInput := member.MbDatetime.Format(time.DateTime) + GetClientIp(r) + r.Header.Get("User-Agent")
+
+	hash := md5.Sum([]byte(ssMbKeyInput))
+	byteSlice := hash[:]
+	return hex.EncodeToString(byteSlice)
 }

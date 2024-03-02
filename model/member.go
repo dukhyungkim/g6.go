@@ -75,3 +75,15 @@ func (m *Member) IsInterceptOrLeave() bool {
 
 	return m.MbLeaveDate != "" || m.MbInterceptDate != ""
 }
+
+func (m *Member) IsEmailCertify(useEmailCertify bool) bool {
+	if !useEmailCertify {
+		return true
+	}
+
+	if m.MbID == "" {
+		return false
+	}
+
+	return !m.MbEmailCertify.IsZero()
+}
