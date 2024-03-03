@@ -13,6 +13,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var mbIdChecker = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -69,6 +70,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		request.State.CookieDomain = os.Getenv("COOKIE_DOMAIN")
 
+		var member *model.Member
 		isAutoLogin := false
 		sessionMbId := request.Session["ss_mb_id"]
 		cookieMbId := request.Cookies["ck_mb_id"]
@@ -76,7 +78,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		memberService := service.NewMemberService(dbConn)
 		if sessionMbId != "" {
-			member, err := memberService.CreateById(sessionMbId)
+			member, err = memberService.CreateById(sessionMbId)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -86,7 +88,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 			}
 		} else if cookieMbId != "" {
 			mbId := mbIdChecker.ReplaceAllString(cookieMbId, "")
-			member, err := memberService.CreateById(mbId)
+			member, err = memberService.CreateById(mbId)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -101,6 +103,19 @@ func MainMiddleware(next http.Handler) http.Handler {
 				}
 			}
 		}
+
+		if member != nil {
+			nowDate := time.Now().Format(time.DateOnly)
+			if member.MbTodayLogin.Format(time.DateOnly) != nowDate {
+				// TODO insert point
+				member.MbTodayLogin = time.Now()
+				member.MbLoginIP = clientIp
+				// TODO update member to db
+			}
+		}
+
+		request.State.LoginMember = member
+		request.State.IsSuperAdmin = lib.IsSuperAdmin(request, member.MbID)
 
 		next.ServeHTTP(w, r)
 	}

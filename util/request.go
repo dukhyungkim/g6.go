@@ -34,12 +34,12 @@ func (r Request) ToMap() map[string]any {
 }
 
 type State struct {
-	Config       model.Config `json:"config"`
-	IsSuperAdmin bool         `json:"is_super_admin"`
-	LoginMember  string       `json:"login_member"`
-	IsMobile     bool         `json:"is_mobile"`
-	Editor       string       `json:"editor"`
-	UseEditor    bool         `json:"use_editor"`
-	Title        string       `json:"title"`
-	CookieDomain string       `json:"cookie_domain"`
+	Config       model.Config  `json:"config"`
+	IsSuperAdmin bool          `json:"is_super_admin"`
+	LoginMember  *model.Member `json:"login_member"`
+	IsMobile     bool          `json:"is_mobile"`
+	Editor       string        `json:"editor"`
+	UseEditor    bool          `json:"use_editor"`
+	Title        string        `json:"title"`
+	CookieDomain string        `json:"cookie_domain"`
 }
