@@ -107,10 +107,10 @@ func MainMiddleware(next http.Handler) http.Handler {
 		if member != nil {
 			nowDate := time.Now().Format(time.DateOnly)
 			if member.MbTodayLogin.Format(time.DateOnly) != nowDate {
-				// TODO insert point
+				insertPoint(dbConn, request, member, nowDate+" 첫로그인", "@login", nowDate)
 				member.MbTodayLogin = time.Now()
 				member.MbLoginIP = clientIp
-				// TODO update member to db
+				dbConn.Model(member).Select("mb_today_login", "mb_login_ip").Updates(member)
 			}
 		}
 
@@ -120,6 +120,28 @@ func MainMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
+}
+
+func insertPoint(dbConn *db.Database, request util.Request, member *model.Member, content string, relTable string, relAction string) {
+	cfg := request.State.Config
+
+	if cfg.CfUsePoint == 0 {
+		return
+	}
+
+	if cfg.CfLoginPoint == 0 {
+		return
+	}
+
+	if member == nil {
+		return
+	}
+
+	if relTable != "" || relAction != "" {
+		// TODO
+		dbConn.Where("mb_id")
+	}
+
 }
 
 func shouldRunMiddleware(path string) bool {
