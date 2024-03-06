@@ -69,3 +69,14 @@ func SessionMemberKey(r *http.Request, member *model.Member) string {
 	byteSlice := hash[:]
 	return hex.EncodeToString(byteSlice)
 }
+
+func IsPossibleIP(request util.Request, clientIP string) bool {
+	// TODO
+	//cfPossibleIP := request.State.Config.CfPossibleIP
+	return true
+}
+
+func IsInterceptIP(request util.Request, clientIP string) bool {
+	// TODO
+	return false
+}

@@ -74,7 +74,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 		isAutoLogin := false
 		sessionMbId := request.Session["ss_mb_id"]
 		cookieMbId := request.Cookies["ck_mb_id"]
-		clientIp := lib.GetClientIp(r)
+		clientIP := lib.GetClientIp(r)
 
 		memberService := service.NewMemberService(dbConn)
 		if sessionMbId != "" {
@@ -109,13 +109,29 @@ func MainMiddleware(next http.Handler) http.Handler {
 			if member.MbTodayLogin.Format(time.DateOnly) != nowDate {
 				insertPoint(dbConn, request, member, nowDate+" 첫로그인", "@login", nowDate)
 				member.MbTodayLogin = time.Now()
-				member.MbLoginIP = clientIp
+				member.MbLoginIP = clientIP
 				dbConn.Model(member).Select("mb_today_login", "mb_login_ip").Updates(member)
 			}
 		}
 
 		request.State.LoginMember = member
 		request.State.IsSuperAdmin = lib.IsSuperAdmin(request, member.MbID)
+
+		if !lib.IsPossibleIP(request, clientIP) {
+			lib.SendHTML(w, "<meta charset=utf-8>접근이 허용되지 않은 IP 입니다.")
+			return
+		}
+		if lib.IsInterceptIP(request, clientIP) {
+			lib.SendHTML(w, "<meta charset=utf-8>접근이 차단된 IP 입니다.")
+			return
+		}
+
+		const secondsOfDay = 60 * 60 * 24
+		cookieDomain := request.State.CookieDomain
+
+		if isAutoLogin == true && request.Session["ss_mb_id"] != "" {
+			// TODO set cookie
+		}
 
 		next.ServeHTTP(w, r)
 	}
