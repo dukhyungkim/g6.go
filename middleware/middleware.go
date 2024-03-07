@@ -72,6 +72,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		var member *model.Member
 		isAutoLogin := false
+		ssMbKey := ""
 		sessionMbId := request.Session["ss_mb_id"]
 		cookieMbId := request.Cookies["ck_mb_id"]
 		clientIP := lib.GetClientIp(r)
@@ -96,7 +97,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 			if !lib.IsSuperAdmin(request, mbId) &&
 				member.IsEmailCertify(cfg.CfUseEmailCertify == 1) &&
 				member.IsInterceptOrLeave() {
-				ssMbKey := lib.SessionMemberKey(r, member)
+				ssMbKey = lib.SessionMemberKey(r, member)
 				if request.Cookies["ck_auto"] == ssMbKey {
 					request.Session["ss_mb_id"] = cookieMbId
 					isAutoLogin = true
@@ -130,7 +131,34 @@ func MainMiddleware(next http.Handler) http.Handler {
 		cookieDomain := request.State.CookieDomain
 
 		if isAutoLogin == true && request.Session["ss_mb_id"] != "" {
-			// TODO set cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:   "ck_mb_id",
+				Value:  cookieMbId,
+				Domain: cookieDomain,
+				MaxAge: secondsOfDay * 30,
+			})
+
+			http.SetCookie(w, &http.Cookie{
+				Name:   "ck_auto",
+				Value:  ssMbKey,
+				Domain: cookieDomain,
+				MaxAge: secondsOfDay * 30,
+			})
+		}
+
+		ckVisitIP, err := r.Cookie("ck_visit_ip")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if ckVisitIP.Value != clientIP {
+			http.SetCookie(w, &http.Cookie{
+				Name:   "ck_visit_ip",
+				Value:  clientIP,
+				Domain: cookieDomain,
+				MaxAge: secondsOfDay,
+			})
+			lib.RecordVisit(r)
 		}
 
 		next.ServeHTTP(w, r)

@@ -80,3 +80,7 @@ func IsInterceptIP(request util.Request, clientIP string) bool {
 	// TODO
 	return false
 }
+
+func RecordVisit(r *http.Request) {
+	// TODO
+}
