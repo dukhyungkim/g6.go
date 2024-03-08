@@ -2,12 +2,14 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/service"
 	"github.com/dukhyungkim/gonuboard/util"
+	"gorm.io/gorm"
 	"net/http"
 	"net/url"
 	"os"
@@ -159,6 +161,33 @@ func MainMiddleware(next http.Handler) http.Handler {
 				MaxAge: secondsOfDay,
 			})
 			lib.RecordVisit(r)
+		}
+
+		if !request.State.IsSuperAdmin && !strings.HasPrefix(r.URL.Path, "/admin") {
+			var currentLogin model.Login
+			err = dbConn.Where("lo_ip = ?", clientIP).Take(&currentLogin).Error
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					newLogin := model.Login{
+						LoID:       25,
+						LoIP:       clientIP,
+						MbID:       member.MbID,
+						LoDatetime: time.Now(),
+						LoLocation: r.URL.Path,
+						LoURL:      r.URL.Path,
+					}
+					dbConn.Create(&newLogin)
+				} else {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			} else {
+				currentLogin.MbID = member.MbID
+				currentLogin.LoDatetime = time.Now()
+				currentLogin.LoLocation = r.URL.Path
+				currentLogin.LoLocation = r.URL.Path
+				dbConn.Save(&currentLogin)
+			}
 		}
 
 		next.ServeHTTP(w, r)
