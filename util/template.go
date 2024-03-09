@@ -61,3 +61,13 @@ func AlertTemplate(req Request, message string, redirect string) ([]byte, error)
 
 	return bytes, nil
 }
+
+func RenderAlertTemplate(w http.ResponseWriter, request Request, message string, statusCode int, url string) {
+	tpl, err := AlertTemplate(request, message, url)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(statusCode)
+	_, _ = w.Write(tpl)
+}

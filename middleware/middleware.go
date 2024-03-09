@@ -38,7 +38,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		if !strings.HasPrefix(r.URL.Path, "/install") {
 			if config.NotExistENV {
-				renderAlertTemplate(w, request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
+				util.RenderAlertTemplate(w, request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
 				return
 			}
 
@@ -48,7 +48,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 				return
 			}
 			if !ok {
-				renderAlertTemplate(w, request, "DB 또는 테이블이 존재하지 않습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
+				util.RenderAlertTemplate(w, request, "DB 또는 테이블이 존재하지 않습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
 				return
 			}
 		} else {
@@ -110,7 +110,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 		if member != nil {
 			nowDate := time.Now().Format(time.DateOnly)
 			if member.MbTodayLogin.Format(time.DateOnly) != nowDate {
-				insertPoint(dbConn, request, member, nowDate+" 첫로그인", "@login", nowDate)
+				lib.InsertPoint(dbConn, request, member, nowDate+" 첫로그인", "@login", nowDate)
 				member.MbTodayLogin = time.Now()
 				member.MbLoginIP = clientIP
 				dbConn.Model(member).Select("mb_today_login", "mb_login_ip").Updates(member)
@@ -195,44 +195,12 @@ func MainMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func insertPoint(dbConn *db.Database, request util.Request, member *model.Member, content string, relTable string, relAction string) {
-	cfg := request.State.Config
-
-	if cfg.CfUsePoint == 0 {
-		return
-	}
-
-	if cfg.CfLoginPoint == 0 {
-		return
-	}
-
-	if member == nil {
-		return
-	}
-
-	if relTable != "" || relAction != "" {
-		// TODO
-		dbConn.Where("mb_id")
-	}
-
-}
-
 func shouldRunMiddleware(path string) bool {
 	switch path {
 	case "/generate_token":
 		return false
 	}
 	return true
-}
-
-func renderAlertTemplate(w http.ResponseWriter, request util.Request, message string, statusCode int, url string) {
-	tpl, err := util.AlertTemplate(request, message, url)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(statusCode)
-	_, _ = w.Write(tpl)
 }
 
 type CtxKey string
