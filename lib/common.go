@@ -7,7 +7,9 @@ import (
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/util"
+	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -71,13 +73,43 @@ func SessionMemberKey(r *http.Request, member *model.Member) string {
 }
 
 func IsPossibleIP(request util.Request, clientIP string) bool {
-	// TODO
-	//cfPossibleIP := request.State.Config.CfPossibleIP
-	return true
+	ipList := request.State.Config.CfPossibleIP
+	return checkIPList(request, clientIP, ipList, true)
 }
 
 func IsInterceptIP(request util.Request, clientIP string) bool {
-	// TODO
+	ipList := request.State.Config.CfInterceptIP
+	return checkIPList(request, clientIP, ipList, false)
+}
+
+func checkIPList(request util.Request, clientIP string, ipList string, allow bool) bool {
+	if request.State.IsSuperAdmin {
+		return allow
+	}
+
+	ipList = strings.TrimSpace(ipList)
+	if ipList == "" {
+		return allow
+	}
+
+	ipPatterns := strings.Split(ipList, "\n")
+	for _, pattern := range ipPatterns {
+		pattern = strings.TrimSpace(pattern)
+		if pattern == "" {
+			return false
+		}
+		pattern = strings.ReplaceAll(pattern, ".", `\.`)
+		pattern = strings.ReplaceAll(pattern, "+", `[0-9\.]+`)
+		pattern = fmt.Sprintf("^%s$", pattern)
+		isMatch, err := regexp.MatchString(pattern, clientIP)
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+		if isMatch {
+			return true
+		}
+	}
 	return false
 }
 

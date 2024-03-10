@@ -190,6 +190,9 @@ func MainMiddleware(next http.Handler) http.Handler {
 			}
 		}
 
+		timeDelta := time.Unix(int64(cfg.CfLoginMinutes)*60, 0)
+		dbConn.Where("lo_datetime < ?", timeDelta).Delete(&model.Login{})
+
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
