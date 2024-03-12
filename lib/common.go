@@ -113,6 +113,22 @@ func checkIPList(request util.Request, clientIP string, ipList string, allow boo
 	return false
 }
 
-func RecordVisit(r *http.Request) {
+func RecordVisit(r *http.Request) error {
+	dbConn := db.GetInstance()
+	viIP := GetClientIp(r)
+
+	var count int64
+	today := time.Now().Format(time.DateOnly)
+	err := dbConn.Where("vi_date = ? and vi_ip", today, viIP).Count(&count).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if count != 0 {
+		return nil
+	}
+
 	// TODO
+	return nil
 }

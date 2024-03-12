@@ -160,7 +160,11 @@ func MainMiddleware(next http.Handler) http.Handler {
 				Domain: cookieDomain,
 				MaxAge: secondsOfDay,
 			})
-			lib.RecordVisit(r)
+			err = lib.RecordVisit(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		if !request.State.IsSuperAdmin && !strings.HasPrefix(r.URL.Path, "/admin") {

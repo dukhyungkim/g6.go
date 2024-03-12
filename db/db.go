@@ -21,12 +21,22 @@ func IsSupportedEngines(engine string) bool {
 	return false
 }
 
+var instance *Database
+
 type Database struct {
 	*gorm.DB
 	engine string
 }
 
+func GetInstance() *Database {
+	return instance
+}
+
 func NewDB(engine string) (*Database, error) {
+	if instance != nil {
+		return instance, nil
+	}
+
 	var db *gorm.DB
 	var err error
 	switch strings.ToLower(engine) {
