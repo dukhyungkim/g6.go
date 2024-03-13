@@ -7,6 +7,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/mileusna/useragent"
 	"log"
 	"net/http"
 	"regexp"
@@ -128,6 +129,24 @@ func RecordVisit(r *http.Request) error {
 	if count != 0 {
 		return nil
 	}
+
+	referer := r.Referer()
+	userAgent := r.UserAgent()
+	ua := useragent.Parse(userAgent)
+	browser := ua.Name
+	os := ua.OS
+	device := ua.Device
+	visit := model.Visit{
+		ViIP:      viIP,
+		ViDate:    time.Now().Truncate(24 * time.Hour),
+		ViTime:    time.Now(),
+		ViReferer: referer,
+		ViAgent:   userAgent,
+		ViBrowser: browser,
+		ViOs:      os,
+		ViDevice:  device,
+	}
+	dbConn.Create(visit)
 
 	// TODO
 	return nil
