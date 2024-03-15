@@ -136,9 +136,10 @@ func RecordVisit(r *http.Request) error {
 	browser := ua.Name
 	os := ua.OS
 	device := ua.Device
+	todayDate := time.Now().Truncate(24 * time.Hour)
 	visit := model.Visit{
 		ViIP:      viIP,
-		ViDate:    time.Now().Truncate(24 * time.Hour),
+		ViDate:    todayDate,
 		ViTime:    time.Now(),
 		ViReferer: referer,
 		ViAgent:   userAgent,
@@ -146,8 +147,59 @@ func RecordVisit(r *http.Request) error {
 		ViOs:      os,
 		ViDevice:  device,
 	}
-	dbConn.Create(visit)
+	err = dbConn.Create(visit).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
-	// TODO
+	var visitCountToday int64
+	err = dbConn.Where("vi_date = ?", today).Count(&visitCountToday).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	visitSum := model.VisitSum{
+		VsDate:  todayDate,
+		VsCount: visitCountToday,
+	}
+	err = dbConn.Save(&visitSum).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	yesterday := time.Now().AddDate(0, 0, -1).Truncate(24 * time.Hour)
+	var yesterdayVisitCount int64
+	err = dbConn.Where("vi_date = ?", yesterday).Count(&visitCountToday).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	var maxVisitCount int64
+	err = dbConn.Model(&visitSum).Select("max(vs_count)").Scan(&maxVisitCount).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	var totalVisitCount int64
+	err = dbConn.Model(&visitSum).Select("sum(vs_count)").Scan(&totalVisitCount).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	var cfg model.Config
+	dbConn.First(&cfg)
+	cfg.CfVisit = fmt.Sprintf("오늘:%d,어제:%d,최대:%d,전체:%d", visitCountToday, yesterdayVisitCount, maxVisitCount, totalVisitCount)
+	err = dbConn.Model(&cfg).Where("cf_id = ?", cfg.CfID).Update("cf_visit", cfg.CfVisit).Error
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
 	return nil
 }
