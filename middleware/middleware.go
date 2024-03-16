@@ -110,7 +110,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 		if member != nil {
 			nowDate := time.Now().Format(time.DateOnly)
 			if member.MbTodayLogin.Format(time.DateOnly) != nowDate {
-				lib.InsertPoint(dbConn, request, member, nowDate+" 첫로그인", "@login", nowDate)
+				lib.InsertPoint(dbConn, request, member.MbID, member.MbPoint, nowDate+" 첫로그인", "@login", member.MbID, nowDate, 0)
 				member.MbTodayLogin = time.Now()
 				member.MbLoginIP = clientIP
 				dbConn.Model(member).Select("mb_today_login", "mb_login_ip").Updates(member)
