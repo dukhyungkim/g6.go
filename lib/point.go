@@ -4,6 +4,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/google/uuid"
 	"log"
 	"time"
 )
@@ -77,6 +78,63 @@ func InsertPoint(dbConn *db.Database, request util.Request, mbId string, point i
 }
 
 func getPointSum(request util.Request, mbId string) int {
-	// TODO
-	return 0
+	cfg := request.State.Config
+	dbConn := db.GetInstance()
+	now := time.Now()
+
+	if cfg.CfPointTerm > 0 {
+		expirePoint := getExpirePoint(request, mbId)
+		if expirePoint > 0 {
+			member := getMember(mbId)
+			newPoint := model.Point{
+				MbID:         mbId,
+				PoDatetime:   now,
+				PoContent:    "포인트 소멸",
+				PoPoint:      expirePoint * -1,
+				PoUsePoint:   0,
+				PoExpired:    1,
+				PoExpireDate: now,
+				PoMbPoint:    member.MbPoint - expirePoint,
+				PoRelTable:   "@expire",
+				PoRelID:      mbId,
+				PoRelAction:  "expire-" + uuid.NewString(),
+			}
+			dbConn.Create(&newPoint)
+		}
+
+		err := dbConn.Model(&model.Point{}).
+			Where("mb_id = ? AND po_expired <> 1 AND po_expire_date <> '9999-12-31' AND po_expire_date < ?", mbId, now).
+			Update("po_expired", 1).
+			Error
+		if err != nil {
+			log.Println(err)
+			return 0
+		}
+	}
+
+	var pointSum int64
+	err := dbConn.Where("mb_id = ?", mbId).Select("sum(po_point)").Scan(&pointSum).Error
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+
+	return int(pointSum)
+}
+
+func getExpirePoint(request util.Request, mbId string) int {
+	cfg := request.State.Config
+
+	if cfg.CfPointTerm <= 0 {
+		return 0
+	}
+
+	dbConn := db.GetInstance()
+	var pointSum int64
+	err := dbConn.Where("mb_id = ? AND po_expired = 0 AND po_expire_date < ?", mbId, time.Now()).Select("sum(po_point - po_use_point)").Scan(&pointSum).Error
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+	return int(pointSum)
 }
