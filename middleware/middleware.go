@@ -3,13 +3,13 @@ package middleware
 import (
 	"context"
 	"errors"
-	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/service"
 	"github.com/dukhyungkim/gonuboard/util"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,18 +32,20 @@ func MainMiddleware(next http.Handler) http.Handler {
 		engine := os.Getenv("DB_ENGINE")
 		dbConn, err := db.NewDB(engine)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if !strings.HasPrefix(r.URL.Path, "/install") {
-			if config.NotExistENV {
+			if !lib.IsFileExist(util.EnvPath) {
 				util.RenderAlertTemplate(w, request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
 				return
 			}
 
 			ok, err := dbConn.HasTable(model.Prefix + "config")
 			if err != nil {
+				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -58,6 +60,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		cfg := model.Config{}
 		if dbConn.Take(&cfg).Error != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -83,6 +86,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 		if sessionMbId != "" {
 			member, err = memberService.CreateById(sessionMbId)
 			if err != nil {
+				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -93,6 +97,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 			mbId := mbIdChecker.ReplaceAllString(cookieMbId, "")
 			member, err = memberService.CreateById(mbId)
 			if err != nil {
+				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -118,7 +123,9 @@ func MainMiddleware(next http.Handler) http.Handler {
 		}
 
 		request.State.LoginMember = member
-		request.State.IsSuperAdmin = lib.IsSuperAdmin(request, member.MbID)
+		if member != nil {
+			request.State.IsSuperAdmin = lib.IsSuperAdmin(request, member.MbID)
+		}
 
 		if !lib.IsPossibleIP(request, clientIP) {
 			lib.SendHTML(w, "<meta charset=utf-8>접근이 허용되지 않은 IP 입니다.")
@@ -162,6 +169,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 			})
 			err = lib.RecordVisit(r)
 			if err != nil {
+				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -182,6 +190,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 					}
 					dbConn.Create(&newLogin)
 				} else {
+					log.Println(err)
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}

@@ -4,6 +4,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
+	"log"
 	"net/http"
 	"sync"
 )
@@ -15,7 +16,7 @@ func init() {
 	defaultCtx.Set("url_for", urlFor)
 }
 
-func themeAsset(r map[string]any, assetPath string) string {
+func themeAsset(_ map[string]any, assetPath string) string {
 	return "templates/basic/static/" + assetPath
 }
 
@@ -32,12 +33,14 @@ func urlFor(assetPath string) string {
 func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) {
 	tpl, err := gonja.FromFile(path)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = tpl.Execute(w, data)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -65,6 +68,7 @@ func AlertTemplate(req Request, message string, redirect string) ([]byte, error)
 func RenderAlertTemplate(w http.ResponseWriter, request Request, message string, statusCode int, url string) {
 	tpl, err := AlertTemplate(request, message, url)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

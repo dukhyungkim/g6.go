@@ -111,20 +111,23 @@ func (db *Database) ListAllTables() ([]string, error) {
 }
 
 func (db *Database) HasTable(tableName string) (bool, error) {
-	var query string
+	var count int64
+	var err error
 	switch db.engine {
 	case EngineSqlite:
-		query = sqliteHasTableQuery(tableName)
+		err = db.Table("sqlite_master").
+			Where("type = 'table' AND name = ?", tableName).
+			Select("count(*)").
+			Scan(&count).
+			Error
 	case EngineMysql:
 		// TODO
 	case EnginePostgres:
 		// TODO
 	}
-
-	var count int64
-	err := db.Raw(query).Scan(&count).Error
 	if err != nil {
 		return false, err
 	}
+
 	return count == 1, nil
 }

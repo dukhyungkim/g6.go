@@ -15,6 +15,7 @@ import (
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"gorm.io/gorm"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -51,6 +52,7 @@ func licenseHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		license, err := readLicense()
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -91,12 +93,14 @@ func installDatabase() http.HandlerFunc {
 
 		sessionSecretKey, err := util.TokenURLSafe(50)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = copyFile("example.env", util.EnvPath)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -112,6 +116,7 @@ func installDatabase() http.HandlerFunc {
 			util.SetKeyToEnv(util.EnvPath, "COOKIE_DOMAIN", ""),
 		} {
 			if err = setKey(); err != nil {
+				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -127,17 +132,20 @@ func installDatabase() http.HandlerFunc {
 		// TODO use db handler
 		_, err = db.NewDB(form.DBEngine)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		pluginList, err := plugin.ReadPluginState()
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		err = plugin.WritePluginState(pluginList)
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -206,7 +214,7 @@ func parseInstallForm(r *http.Request) (*installForm, error) {
 func copyFile(src, dst string) error {
 	info, err := os.Stat(src)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if !info.Mode().IsRegular() {

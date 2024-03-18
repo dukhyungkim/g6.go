@@ -8,6 +8,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/install"
 	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/go-chi/render"
+	"log"
 	"net/http"
 	"os"
 
@@ -19,6 +20,8 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	parseFlags()
 
 	if FlagVersion {
@@ -115,6 +118,7 @@ func (t TokenResponse) Render(http.ResponseWriter, *http.Request) error {
 func generateToken(w http.ResponseWriter, r *http.Request) {
 	tokenHex, err := util.TokenHex(16)
 	if err != nil {
+		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
