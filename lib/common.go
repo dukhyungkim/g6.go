@@ -136,11 +136,13 @@ func RecordVisit(r *http.Request) error {
 	browser := ua.Name
 	os := ua.OS
 	device := ua.Device
-	todayDate := time.Now().Truncate(24 * time.Hour)
+	now := time.Now()
+	viDate := now.Format(time.DateOnly)
+	viTime := now.Format(time.TimeOnly)
 	visit := model.Visit{
 		ViIP:      viIP,
-		ViDate:    todayDate,
-		ViTime:    time.Now(),
+		ViDate:    viDate,
+		ViTime:    viTime,
 		ViReferer: referer,
 		ViAgent:   userAgent,
 		ViBrowser: browser,
@@ -154,14 +156,14 @@ func RecordVisit(r *http.Request) error {
 	}
 
 	var visitCountToday int64
-	err = dbConn.Model(&model.Visit{}).Where("vi_date = ?", today).Count(&visitCountToday).Error
+	err = dbConn.Model(&visit).Where("vi_date = ?", today).Count(&visitCountToday).Error
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	visitSum := model.VisitSum{
-		VsDate:  todayDate,
+		VsDate:  viDate,
 		VsCount: visitCountToday,
 	}
 	err = dbConn.Save(&visitSum).Error
@@ -172,7 +174,7 @@ func RecordVisit(r *http.Request) error {
 
 	yesterday := time.Now().AddDate(0, 0, -1).Truncate(24 * time.Hour)
 	var yesterdayVisitCount int64
-	err = dbConn.Where("vi_date = ?", yesterday).Count(&visitCountToday).Error
+	err = dbConn.Model(&visit).Where("vi_date = ?", yesterday).Count(&visitCountToday).Error
 	if err != nil {
 		log.Println(err)
 		return err
