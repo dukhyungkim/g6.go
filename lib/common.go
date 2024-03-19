@@ -120,7 +120,7 @@ func RecordVisit(r *http.Request) error {
 
 	var count int64
 	today := time.Now().Format(time.DateOnly)
-	err := dbConn.Where("vi_date = ? and vi_ip", today, viIP).Count(&count).Error
+	err := dbConn.Model(&model.Visit{}).Where("vi_date = ? and vi_ip", today, viIP).Count(&count).Error
 	if err != nil {
 		log.Println(err)
 		return err
@@ -147,14 +147,14 @@ func RecordVisit(r *http.Request) error {
 		ViOs:      os,
 		ViDevice:  device,
 	}
-	err = dbConn.Create(visit).Error
+	err = dbConn.Create(&visit).Error
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	var visitCountToday int64
-	err = dbConn.Where("vi_date = ?", today).Count(&visitCountToday).Error
+	err = dbConn.Model(&model.Visit{}).Where("vi_date = ?", today).Count(&visitCountToday).Error
 	if err != nil {
 		log.Println(err)
 		return err

@@ -55,10 +55,11 @@ func NewDB(engine string) (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{
+	instance = &Database{
 		DB:     db,
 		engine: engine,
-	}, nil
+	}
+	return instance, nil
 }
 
 func (db *Database) MigrateTables() error {
