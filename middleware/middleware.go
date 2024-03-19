@@ -157,6 +157,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		ckVisitIP, err := r.Cookie("ck_visit_ip")
 		if err != nil {
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

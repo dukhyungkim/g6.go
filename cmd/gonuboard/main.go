@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/dukhyungkim/gonuboard/config"
+	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/install"
 	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/go-chi/render"
@@ -36,14 +37,18 @@ func main() {
 
 	err := loadEnv()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
+	}
+
+	engine := os.Getenv("DB_ENGINE")
+	_, err = db.NewDB(engine)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	err = Run()
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatalln(err)
 	}
 }
 

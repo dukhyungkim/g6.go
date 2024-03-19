@@ -4,6 +4,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	"log"
 	"strings"
 )
 
@@ -46,6 +47,9 @@ func NewDB(engine string) (*Database, error) {
 		// TODO
 	case EngineMysql:
 		// TODO
+	default:
+		log.Printf("unknown engine: %s. startup with in-memory db\n", engine)
+		db, err = gorm.Open(sqlite.Open("file::memory:?cache=shared"))
 	}
 	if err != nil {
 		return nil, err
