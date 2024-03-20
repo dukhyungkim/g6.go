@@ -14,8 +14,8 @@ func NewMemberService(dbConn *db.Database) *MemberService {
 }
 
 func (m *MemberService) CreateById(id string) (*model.Member, error) {
-	member := model.Member{}
-	if err := m.dbConn.Where("mb_id = ?", id).Scan(&member).Error; err != nil {
+	var member model.Member
+	if err := m.dbConn.Where("mb_id = ?", id).Take(&member).Error; err != nil {
 		return nil, err
 	}
 	return &member, nil

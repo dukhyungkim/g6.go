@@ -97,20 +97,22 @@ func (db *Database) MigrateTables() error {
 }
 
 func (db *Database) ListAllTables() ([]string, error) {
-	var query string
+	var tableNames []string
+	var err error
 	switch db.engine {
 	case EngineSqlite:
-		query = sqliteTablesQuery()
+		err = db.Table("sqlite_master").
+			Where("type = 'table' AND name NOT LIKE 'sqlite_%").
+			Select("name").
+			Scan(&tableNames).
+			Error
 	case EngineMysql:
 		// TODO
 	case EnginePostgres:
 		// TODO
 	}
-
-	var tableNames []string
-	err := db.Raw(query).Scan(&tableNames).Error
 	if err != nil {
-		return nil, err
+		return []string{}, err
 	}
 	return tableNames, nil
 }

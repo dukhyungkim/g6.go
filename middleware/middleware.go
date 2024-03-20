@@ -175,31 +175,34 @@ func MainMiddleware(next http.Handler) http.Handler {
 		}
 
 		if !request.State.IsSuperAdmin && !strings.HasPrefix(r.URL.Path, "/admin") {
+			mbId := ""
+			if member != nil {
+				mbId = member.MbID
+			}
+
 			var currentLogin model.Login
 			err = dbConn.Where("lo_ip = ?", clientIP).Take(&currentLogin).Error
-			if err != nil {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					newLogin := model.Login{
-						LoID:       25,
-						LoIP:       clientIP,
-						MbID:       member.MbID,
-						LoDatetime: time.Now(),
-						LoLocation: r.URL.Path,
-						LoURL:      r.URL.Path,
-					}
-					dbConn.Create(&newLogin)
-				} else {
-					log.Println(err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				newLogin := model.Login{
+					LoID:       25,
+					LoIP:       clientIP,
+					MbID:       mbId,
+					LoDatetime: time.Now(),
+					LoLocation: r.URL.Path,
+					LoURL:      r.URL.Path,
 				}
-			} else {
-				currentLogin.MbID = member.MbID
-				currentLogin.LoDatetime = time.Now()
-				currentLogin.LoLocation = r.URL.Path
-				currentLogin.LoLocation = r.URL.Path
-				dbConn.Save(&currentLogin)
+				dbConn.Create(&newLogin)
+			} else if err != nil {
+				log.Println(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
+
+			currentLogin.MbID = mbId
+			currentLogin.LoDatetime = time.Now()
+			currentLogin.LoLocation = r.URL.Path
+			currentLogin.LoLocation = r.URL.Path
+			dbConn.Save(&currentLogin)
 		}
 
 		timeDelta := time.Unix(int64(cfg.CfLoginMinutes)*60, 0)
@@ -211,11 +214,25 @@ func MainMiddleware(next http.Handler) http.Handler {
 }
 
 func shouldRunMiddleware(path string) bool {
-	switch path {
-	case "/generate_token":
-		return false
+	for _, hasPrefix := range []bool{
+		strings.HasPrefix(path, "/generate_token"),
+		strings.HasPrefix(path, "/device/change"),
+		strings.HasPrefix(path, "/static"),
+		strings.HasPrefix(path, "/theme_static"),
+		endsWith(path, []string{".css", ".js", ".jpg", ".png", ".gif", ".webp"}),
+	} {
+		if hasPrefix {
+			return false
+		}
 	}
 	return true
+}
+
+func endsWith(path string, ends []string) bool {
+	for _, end := range ends {
+		return strings.HasSuffix(path, end)
+	}
+	return false
 }
 
 type CtxKey string
