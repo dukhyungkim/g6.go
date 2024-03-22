@@ -7,6 +7,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/jellydator/ttlcache/v3"
 	"github.com/mileusna/useragent"
 	"log"
 	"net/http"
@@ -204,4 +205,50 @@ func RecordVisit(r *http.Request) error {
 	}
 
 	return nil
+}
+
+const defaultLoginMinute = 10
+
+func GetCurrentLogin(request *util.Request) (int, int) {
+	cfg := request.State.Config
+
+	loginMinute := defaultLoginMinute
+	if cfg.CfLoginMinutes == 0 {
+		loginMinute = cfg.CfLoginMinutes
+	}
+	baseDate := time.Now().Add(time.Duration(loginMinute) * time.Minute)
+
+	result := struct {
+		Login  int `gorm:"login"`
+		Member int `gorm:"member"`
+	}{}
+
+	dbConn := db.GetInstance()
+	dbConn.Model(&model.Login{}).
+		Where("mb_id = ? AND lo_ip NOT '' AND lo_datetime > ?", cfg.CfAdmin, baseDate).
+		Select("COUNT(mb_id) AS login, CASE mb_id WHEN NOT '' THEN 1 ELSE 0 END member").
+		Scan(&result)
+
+	return result.Login, result.Member
+}
+
+var menusCache = ttlcache.New[string, []*model.Menu](
+	ttlcache.WithTTL[string, []*model.Menu](60*time.Second),
+	ttlcache.WithCapacity[string, []*model.Menu](1),
+)
+
+func GetMenus() []*model.Menu {
+	item := menusCache.Get("menus")
+	if item.Value() != nil {
+		return item.Value()
+	}
+
+	dbConn := db.GetInstance()
+	var menus []*model.Menu
+
+	// TODO 부모 메뉴 조회
+	// TODO 자식 메뉴 조회
+
+	menusCache.Set("menus", menus, ttlcache.DefaultTTL)
+	return menus
 }
