@@ -1,12 +1,12 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
 const TableNameMember = "member"
 
-// Member mapped from table <member>
 type Member struct {
 	MbNo            uint      `gorm:"type:INTEGER;primaryKey;not null"`
 	MbID            string    `gorm:"type:VARCHAR(20);unique;not null;default:''"`
@@ -63,9 +63,8 @@ type Member struct {
 	Mb10            string    `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName Member's table name
 func (*Member) TableName() string {
-	return Prefix + TableNameMember
+	return config.Global.DbTablePrefix + TableNameMember
 }
 
 func (m *Member) IsInterceptOrLeave() bool {

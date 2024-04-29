@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -18,5 +19,5 @@ type GroupMember struct {
 
 // TableName GroupMember's table name
 func (*GroupMember) TableName() string {
-	return Prefix + TableNameGroupMember
+	return config.Global.DbTablePrefix + TableNameGroupMember
 }

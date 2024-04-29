@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -25,5 +26,5 @@ type MemberSocialProfile struct {
 
 // TableName MemberSocialProfile's table name
 func (*MemberSocialProfile) TableName() string {
-	return Prefix + TableNameMemberSocialProfile
+	return config.Global.DbTablePrefix + TableNameMemberSocialProfile
 }

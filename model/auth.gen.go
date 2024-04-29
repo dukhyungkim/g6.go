@@ -2,6 +2,8 @@
 
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameAuth = "auth"
 
 // Auth mapped from table <auth>
@@ -13,5 +15,5 @@ type Auth struct {
 
 // TableName Auth's table name
 func (*Auth) TableName() string {
-	return Prefix + TableNameAuth
+	return config.Global.DbTablePrefix + TableNameAuth
 }

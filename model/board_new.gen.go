@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -20,5 +21,5 @@ type BoardNew struct {
 
 // TableName BoardNew's table name
 func (*BoardNew) TableName() string {
-	return Prefix + TableNameBoardNew
+	return config.Global.DbTablePrefix + TableNameBoardNew
 }

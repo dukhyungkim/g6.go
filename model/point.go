@@ -1,12 +1,12 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
 const TableNamePoint = "point"
 
-// Point mapped from table <point>
 type Point struct {
 	PoID         uint      `gorm:"type:INTEGER;primaryKey;autoIncrement"`
 	MbID         string    `gorm:"type:VARCHAR(20);not null;default:''"`
@@ -23,7 +23,6 @@ type Point struct {
 	PoRelAction  string    `gorm:"type:VARCHAR(100);not null;default:''"`
 }
 
-// TableName Point's table name
 func (*Point) TableName() string {
-	return Prefix + TableNamePoint
+	return config.Global.DbTablePrefix + TableNamePoint
 }

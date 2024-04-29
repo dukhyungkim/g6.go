@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameMenu = "menu"
 
-// Menu mapped from table <menu>
 type Menu struct {
 	MeID        int    `gorm:"type:INTEGER;primaryKey;autoincrement"`
 	MeCode      string `gorm:"type:VARCHAR(255);not null;default:''"`
@@ -14,7 +15,6 @@ type Menu struct {
 	MeMobileUse int    `gorm:"type:INTEGER;not null;default:0"`
 }
 
-// TableName Menu's table name
 func (*Menu) TableName() string {
-	return Prefix + TableNameMenu
+	return config.Global.DbTablePrefix + TableNameMenu
 }

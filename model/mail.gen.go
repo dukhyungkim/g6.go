@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -20,5 +21,5 @@ type Mail struct {
 
 // TableName Mail's table name
 func (*Mail) TableName() string {
-	return Prefix + TableNameMail
+	return config.Global.DbTablePrefix + TableNameMail
 }

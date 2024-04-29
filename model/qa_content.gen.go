@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -41,5 +42,5 @@ type QaContent struct {
 
 // TableName QaContent's table name
 func (*QaContent) TableName() string {
-	return Prefix + TableNameQaContent
+	return config.Global.DbTablePrefix + TableNameQaContent
 }

@@ -1,12 +1,12 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
 const TableNameLogin = "login"
 
-// Login mapped from table <login>
 type Login struct {
 	LoID       uint      `gorm:"type:INTEGER;primaryKey;autoincrement"`
 	LoIP       string    `gorm:"type:VARCHAR(100);not null;default:''"`
@@ -16,7 +16,6 @@ type Login struct {
 	LoURL      string    `gorm:"type:TEXT;not null;default:''"`
 }
 
-// TableName Login's table name
 func (*Login) TableName() string {
-	return Prefix + TableNameLogin
+	return config.Global.DbTablePrefix + TableNameLogin
 }

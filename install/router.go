@@ -122,13 +122,6 @@ func installDatabase() http.HandlerFunc {
 			}
 		}
 
-		isResponsive, err := strconv.ParseBool(os.Getenv("IS_RESPONSIVE"))
-		if err != nil {
-			isResponsive = false
-		}
-		config.IsResponsive = isResponsive
-
-		model.Prefix = form.DBTablePrefix
 		// TODO use db handler
 		_, err = db.NewDB(form.DBEngine)
 		if err != nil {
@@ -263,7 +256,7 @@ func installProcess() http.HandlerFunc {
 				sendSSE(w, failedInstallMessage(err))
 				return
 			}
-			targetPrefix := model.Prefix + model.WriteTablePrefix
+			targetPrefix := config.Global.DbTablePrefix + model.WriteTablePrefix
 			for _, table := range tables {
 				if strings.HasPrefix(table, targetPrefix) {
 					err = dbConn.Migrator().DropTable(table)

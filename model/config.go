@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameConfig = "config"
 
-// Config mapped from table <config>
 type Config struct {
 	CfID                  uint   `gorm:"type:INTEGER;primaryKey;not null"`
 	CfTitle               string `gorm:"type:VARCHAR(255);not null;default:''"`
@@ -161,7 +162,6 @@ type Config struct {
 	Cf10                  string `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName Config's table name
 func (*Config) TableName() string {
-	return Prefix + TableNameConfig
+	return config.Global.DbTablePrefix + TableNameConfig
 }

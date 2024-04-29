@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -23,5 +24,5 @@ type Memo struct {
 
 // TableName Memo's table name
 func (*Memo) TableName() string {
-	return Prefix + TableNameMemo
+	return config.Global.DbTablePrefix + TableNameMemo
 }

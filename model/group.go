@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameGroup = "group"
 
-// Group mapped from table <group>
 type Group struct {
 	GrID        string `gorm:"type:VARCHAR(10);primaryKey;not null;"`
 	GrSubject   string `gorm:"type:VARCHAR(255);not null;default:''"`
@@ -32,7 +33,6 @@ type Group struct {
 	Gr10        string `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName Group's table name
 func (*Group) TableName() string {
-	return Prefix + TableNameGroup
+	return config.Global.DbTablePrefix + TableNameGroup
 }

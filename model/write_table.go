@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -54,5 +55,5 @@ func NewWriteTable(tableName string) *WriteTable {
 }
 
 func (t *WriteTable) TableName() string {
-	return Prefix + WriteTablePrefix + t.tableName
+	return config.Global.DbTablePrefix + WriteTablePrefix + t.tableName
 }

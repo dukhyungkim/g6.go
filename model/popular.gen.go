@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -18,5 +19,5 @@ type Popular struct {
 
 // TableName Popular's table name
 func (*Popular) TableName() string {
-	return Prefix + TableNamePopular
+	return config.Global.DbTablePrefix + TableNamePopular
 }

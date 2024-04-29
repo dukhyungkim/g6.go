@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -29,5 +30,5 @@ type BoardFile struct {
 
 // TableName BoardFile's table name
 func (*BoardFile) TableName() string {
-	return Prefix + TableNameBoardFile
+	return config.Global.DbTablePrefix + TableNameBoardFile
 }

@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameVisit = "visit"
 
-// Visit mapped from table <visit>
 type Visit struct {
 	ViID      uint   `gorm:"type:INTEGER;primaryKey;autoincrement"`
 	ViIP      string `gorm:"type:VARCHAR(100);not null;default:''"`
@@ -15,7 +16,6 @@ type Visit struct {
 	ViDevice  string `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName Visit's table name
 func (*Visit) TableName() string {
-	return Prefix + TableNameVisit
+	return config.Global.DbTablePrefix + TableNameVisit
 }

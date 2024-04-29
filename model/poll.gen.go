@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -41,5 +42,5 @@ type Poll struct {
 
 // TableName Poll's table name
 func (*Poll) TableName() string {
-	return Prefix + TableNamePoll
+	return config.Global.DbTablePrefix + TableNamePoll
 }

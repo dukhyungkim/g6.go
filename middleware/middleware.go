@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/model"
@@ -12,7 +13,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -29,7 +29,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 
 		request := r.Context().Value(KeyRequest).(util.Request)
 
-		engine := os.Getenv("DB_ENGINE")
+		engine := config.Global.DbEngine
 		dbConn, err := db.NewDB(engine)
 		if err != nil {
 			log.Println(err)
@@ -38,12 +38,12 @@ func MainMiddleware(next http.Handler) http.Handler {
 		}
 
 		if !strings.HasPrefix(r.URL.Path, "/install") {
-			if !lib.IsFileExist(util.EnvPath) {
+			if !config.ExistENV {
 				util.RenderAlertTemplate(w, request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
 				return
 			}
 
-			ok, err := dbConn.HasTable(model.Prefix + "config")
+			ok, err := dbConn.HasTable(config.Global.DbTablePrefix + "config")
 			if err != nil {
 				log.Println(err)
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -73,7 +73,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 			request.State.UseEditor = true
 		}
 
-		request.State.CookieDomain = os.Getenv("COOKIE_DOMAIN")
+		request.State.CookieDomain = config.Global.CookieDomain
 
 		var member *model.Member
 		isAutoLogin := false

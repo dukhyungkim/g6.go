@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameBoard = "board"
 
-// Board mapped from table <board>
 type Board struct {
 	BoTable               string `gorm:"type:VARCHAR(20);primaryKey;not null"`
 	GrID                  string
@@ -103,7 +104,6 @@ type Board struct {
 	Bo10                  string `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName Board's table name
 func (*Board) TableName() string {
-	return Prefix + TableNameBoard
+	return config.Global.DbTablePrefix + TableNameBoard
 }

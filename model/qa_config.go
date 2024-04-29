@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameQaConfig = "qa_config"
 
-// QaConfig mapped from table <qa_config>
 type QaConfig struct {
 	ID                  uint   `gorm:"type:INTEGER;primaryKey"`
 	QaTitle             string `gorm:"type:VARCHAR(255);not null;default:''"`
@@ -43,7 +44,6 @@ type QaConfig struct {
 	Qa5                 string `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName QaConfig's table name
 func (*QaConfig) TableName() string {
-	return Prefix + TableNameQaConfig
+	return config.Global.DbTablePrefix + TableNameQaConfig
 }

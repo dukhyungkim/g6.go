@@ -1,8 +1,9 @@
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameContent = "content"
 
-// Content mapped from table <content>
 type Content struct {
 	CoID            string `gorm:"type:VARCHAR(20);not null;default:''"`
 	CoHTML          int    `gorm:"type:INTEGER;not null;default:0"`
@@ -18,7 +19,6 @@ type Content struct {
 	CoIncludeTail   string `gorm:"type:VARCHAR(255);not null;default:''"`
 }
 
-// TableName Content's table name
 func (*Content) TableName() string {
-	return Prefix + TableNameContent
+	return config.Global.DbTablePrefix + TableNameContent
 }

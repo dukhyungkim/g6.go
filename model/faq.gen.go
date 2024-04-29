@@ -2,6 +2,8 @@
 
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameFaq = "faq"
 
 // Faq mapped from table <faq>
@@ -15,5 +17,5 @@ type Faq struct {
 
 // TableName Faq's table name
 func (*Faq) TableName() string {
-	return Prefix + TableNameFaq
+	return config.Global.DbTablePrefix + TableNameFaq
 }

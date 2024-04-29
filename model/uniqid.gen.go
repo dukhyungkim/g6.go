@@ -2,6 +2,8 @@
 
 package model
 
+import "github.com/dukhyungkim/gonuboard/config"
+
 const TableNameUniqid = "uniqid"
 
 // Uniqid mapped from table <uniqid>
@@ -12,5 +14,5 @@ type Uniqid struct {
 
 // TableName Uniqid's table name
 func (*Uniqid) TableName() string {
-	return Prefix + TableNameUniqid
+	return config.Global.DbTablePrefix + TableNameUniqid
 }

@@ -1,6 +1,8 @@
 package model
 
 const (
+	WriteTablePrefix = "write_"
+
 	DeviceBoth = "both"
 	DevicePC   = "pc"
 	Device     = "mobile"

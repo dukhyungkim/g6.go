@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -27,5 +28,5 @@ type NewWin struct {
 
 // TableName NewWin's table name
 func (*NewWin) TableName() string {
-	return Prefix + TableNameNewWin
+	return config.Global.DbTablePrefix + TableNameNewWin
 }

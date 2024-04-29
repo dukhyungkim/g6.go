@@ -243,7 +243,7 @@ func GetMenus() []*model.Menu {
 		return item.Value()
 	}
 
-	dbConn := db.GetInstance()
+	//dbConn := db.GetInstance()
 	var menus []*model.Menu
 
 	// TODO 부모 메뉴 조회

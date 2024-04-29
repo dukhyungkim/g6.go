@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -19,5 +20,5 @@ type Scrap struct {
 
 // TableName Scrap's table name
 func (*Scrap) TableName() string {
-	return Prefix + TableNameScrap
+	return config.Global.DbTablePrefix + TableNameScrap
 }

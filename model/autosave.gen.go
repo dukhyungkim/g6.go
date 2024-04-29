@@ -3,6 +3,7 @@
 package model
 
 import (
+	"github.com/dukhyungkim/gonuboard/config"
 	"time"
 )
 
@@ -20,5 +21,5 @@ type Autosave struct {
 
 // TableName Autosave's table name
 func (*Autosave) TableName() string {
-	return Prefix + TableNameAutosave
+	return config.Global.DbTablePrefix + TableNameAutosave
 }

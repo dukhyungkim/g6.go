@@ -16,7 +16,6 @@ import (
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/joho/godotenv"
 	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
@@ -35,12 +34,12 @@ func main() {
 		return
 	}
 
-	err := loadEnv()
-	if err != nil {
+	err := config.Load()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatalln(err)
 	}
 
-	engine := os.Getenv("DB_ENGINE")
+	engine := config.Global.DbEngine
 	_, err = db.NewDB(engine)
 	if err != nil {
 		log.Fatalln(err)
@@ -78,18 +77,6 @@ func Run() error {
 	err := http.ListenAndServe(addr, r)
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-func loadEnv() error {
-	err := godotenv.Load()
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			config.NotExistENV = true
-		} else {
-			return err
-		}
 	}
 	return nil
 }
