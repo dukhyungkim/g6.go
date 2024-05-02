@@ -5,7 +5,7 @@ import "github.com/dukhyungkim/gonuboard/config"
 const TableNameMenu = "menu"
 
 type Menu struct {
-	MeID        int    `gorm:"type:INTEGER;primaryKey;autoincrement"`
+	MeID        int    `gorm:"type:INTEGER;primaryKey;autoIncrement"`
 	MeCode      string `gorm:"type:VARCHAR(255);not null;default:''"`
 	MeName      string `gorm:"type:VARCHAR(255);not null;default:''"`
 	MeLink      string `gorm:"type:VARCHAR(255);not null;default:''"`

@@ -5,7 +5,7 @@ import "github.com/dukhyungkim/gonuboard/config"
 const TableNameVisit = "visit"
 
 type Visit struct {
-	ViID      uint   `gorm:"type:INTEGER;primaryKey;autoincrement"`
+	ViID      uint   `gorm:"type:INTEGER;primaryKey;autoIncrement"`
 	ViIP      string `gorm:"type:VARCHAR(100);not null;default:''"`
 	ViDate    string `gorm:"type:DATE;not null;default:''"`
 	ViTime    string `gorm:"type:TIME;not null;default:''"`

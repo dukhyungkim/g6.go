@@ -10,6 +10,7 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/mileusna/useragent"
 	"log"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
@@ -41,10 +42,19 @@ func CreateDynamicWriteTable(dbConn *db.Database, tableName string) error {
 }
 
 func GetClientIp(r *http.Request) string {
-	if clientIp := r.Header.Get("X-FORWARDED-FOR"); clientIp != "" {
-		return clientIp
+	ip := r.Header.Get("X-Forwarded-For")
+	if ip == "" {
+		ip = r.Header.Get("X-Real-IP")
 	}
-	return r.RemoteAddr
+	if ip == "" {
+		ip, _, _ = net.SplitHostPort(r.RemoteAddr)
+	}
+
+	if strings.Contains(ip, ":") {
+		ip = net.ParseIP(ip).To4().String()
+	}
+
+	return ip
 }
 
 func IsSuperAdmin(request util.Request, mbId string) bool {
@@ -121,7 +131,7 @@ func RecordVisit(r *http.Request) error {
 
 	var count int64
 	today := time.Now().Format(time.DateOnly)
-	err := dbConn.Model(&model.Visit{}).Where("vi_date = ? and vi_ip", today, viIP).Count(&count).Error
+	err := dbConn.Model(&model.Visit{}).Where("vi_date = ? and vi_ip = ?", today, viIP).Count(&count).Error
 	if err != nil {
 		log.Println(err)
 		return err

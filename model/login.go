@@ -8,7 +8,7 @@ import (
 const TableNameLogin = "login"
 
 type Login struct {
-	LoID       uint      `gorm:"type:INTEGER;primaryKey;autoincrement"`
+	LoID       uint      `gorm:"type:INTEGER;primaryKey;autoIncrement"`
 	LoIP       string    `gorm:"type:VARCHAR(100);not null;default:''"`
 	MbID       string    `gorm:"type:VARCHAR(20);not null;default:''"`
 	LoDatetime time.Time `gorm:"type:DATETIME;not null;default:''"`
