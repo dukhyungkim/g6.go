@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
@@ -9,11 +10,25 @@ import (
 	"sync"
 )
 
-func init() {
+var UserTemplate = newUserTemplateProcessor()
+var AdminTemplate = newAdminTemplateProcessor()
+
+type TemplateProcessor struct {
+	ctx              *exec.Context
+	contextProcessor func(request *Request) *exec.Context
+}
+
+func newUserTemplateProcessor() *TemplateProcessor {
 	defaultCtx := gonja.DefaultContext
 	defaultCtx.Set("default_version", version.Version)
 	defaultCtx.Set("theme_asset", themeAsset)
 	defaultCtx.Set("url_for", urlFor)
+
+	return &TemplateProcessor{ctx: defaultCtx}
+}
+
+func newAdminTemplateProcessor() *TemplateProcessor {
+	return &TemplateProcessor{}
 }
 
 func themeAsset(_ map[string]any, assetPath string) string {
@@ -28,6 +43,12 @@ func urlFor(assetPath string) string {
 		return ""
 	}
 	return value.(string)
+}
+
+func processDefaultContext(request *Request) *exec.Context {
+	return exec.NewContext(map[string]interface{}{
+		"current_login_count": lib.GetCurrentLoginCount(request),
+	})
 }
 
 func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) {

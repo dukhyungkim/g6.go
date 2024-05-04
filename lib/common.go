@@ -219,7 +219,7 @@ func RecordVisit(r *http.Request) error {
 
 const defaultLoginMinute = 10
 
-func GetCurrentLogin(request *util.Request) (int, int) {
+func GetCurrentLoginCount(request *util.Request) [2]int {
 	cfg := request.State.Config
 
 	loginMinute := defaultLoginMinute
@@ -239,7 +239,7 @@ func GetCurrentLogin(request *util.Request) (int, int) {
 		Select("COUNT(mb_id) AS login, CASE mb_id WHEN NOT '' THEN 1 ELSE 0 END member").
 		Scan(&result)
 
-	return result.Login, result.Member
+	return [2]int{result.Login, result.Member}
 }
 
 var menusCache = ttlcache.New[string, []*model.Menu](
