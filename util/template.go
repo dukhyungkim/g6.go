@@ -10,6 +10,17 @@ import (
 	"sync"
 )
 
+func init() {
+	setGlobalContext()
+}
+
+func setGlobalContext() {
+	defaultCtx := gonja.DefaultContext
+	defaultCtx.Set("default_version", version.Version)
+	defaultCtx.Set("theme_asset", themeAsset)
+	defaultCtx.Set("url_for", urlFor)
+}
+
 var UserTemplate = newUserTemplateProcessor()
 var AdminTemplate = newAdminTemplateProcessor()
 
@@ -19,12 +30,7 @@ type TemplateProcessor struct {
 }
 
 func newUserTemplateProcessor() *TemplateProcessor {
-	defaultCtx := gonja.DefaultContext
-	defaultCtx.Set("default_version", version.Version)
-	defaultCtx.Set("theme_asset", themeAsset)
-	defaultCtx.Set("url_for", urlFor)
-
-	return &TemplateProcessor{ctx: defaultCtx}
+	return &TemplateProcessor{}
 }
 
 func newAdminTemplateProcessor() *TemplateProcessor {
