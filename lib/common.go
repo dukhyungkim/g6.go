@@ -262,3 +262,23 @@ func GetMenus() []*model.Menu {
 	menusCache.Set("menus", menus, ttlcache.DefaultTTL)
 	return menus
 }
+
+var lfuCache = ttlcache.New[string, *model.Poll](
+	ttlcache.WithCapacity[string, *model.Poll](128))
+
+func GetRecentPoll() *model.Poll {
+	if pollItem := lfuCache.Get("poll"); pollItem != nil {
+		return pollItem.Value()
+	}
+
+	dbConn := db.GetInstance()
+
+	var poll model.Poll
+	err := dbConn.Model(&model.Poll{}).Where("po_use == 1").Order("po_id desc").First(&poll).Error
+	if err != nil {
+		return nil
+	}
+
+	lfuCache.Set("poll", &poll, ttlcache.DefaultTTL)
+	return &poll
+}
