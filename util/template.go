@@ -1,7 +1,6 @@
 package util
 
 import (
-	"github.com/dukhyungkim/gonuboard/lib"
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
@@ -49,18 +48,6 @@ func urlFor(assetPath string) string {
 		return ""
 	}
 	return value.(string)
-}
-
-func processDefaultContext(request *Request) *exec.Context {
-	return exec.NewContext(map[string]interface{}{
-		"current_login_count": lib.GetCurrentLoginCount(request),
-		"menus":               lib.GetMenus(),
-		// TODO
-		"poll": lib.GetRecentPoll(),
-		//"populars": get_populars(),
-		//"render_latest_posts": render_latest_posts,
-		//"render_visit_statistics": render_visit_statistics,
-	})
 }
 
 func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) {

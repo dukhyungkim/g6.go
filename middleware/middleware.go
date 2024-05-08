@@ -9,6 +9,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/service"
 	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/nikolalohinski/gonja/v2/exec"
 	"gorm.io/gorm"
 	"log"
 	"net/http"
@@ -54,6 +55,7 @@ func MainMiddleware(next http.Handler) http.Handler {
 				return
 			}
 		} else {
+			setTemplateCtx(r)
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -238,7 +240,8 @@ func endsWith(path string, ends []string) bool {
 type CtxKey string
 
 const (
-	KeyRequest CtxKey = "request"
+	KeyRequest     CtxKey = "request"
+	KeyTemplateCtx CtxKey = "templateCtx"
 )
 
 func RequestMiddleware(next http.Handler) http.Handler {
@@ -248,6 +251,24 @@ func RequestMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 	return http.HandlerFunc(fn)
+}
+
+func setTemplateCtx(r *http.Request) {
+	request := r.Context().Value(KeyRequest).(util.Request)
+	ctx := context.WithValue(r.Context(), KeyTemplateCtx, newDefaultTemplateCtx(request))
+	r.WithContext(ctx)
+}
+
+func newDefaultTemplateCtx(request util.Request) *exec.Context {
+	return exec.NewContext(map[string]interface{}{
+		"current_login_count": lib.GetCurrentLoginCount(request),
+		"menus":               lib.GetMenus(),
+		"poll":                lib.GetRecentPoll(),
+		// TODO
+		//"populars": get_populars(),
+		//"render_latest_posts": render_latest_posts,
+		//"render_visit_statistics": render_visit_statistics,
+	})
 }
 
 func UrlForMiddleware(next http.Handler) http.Handler {
