@@ -4,18 +4,18 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/dukhyungkim/gonuboard/config"
-	"github.com/dukhyungkim/gonuboard/db"
-	"github.com/dukhyungkim/gonuboard/install"
-	mw "github.com/dukhyungkim/gonuboard/middleware"
-	"github.com/go-chi/render"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/dukhyungkim/gonuboard/config"
+	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/install"
+	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/dukhyungkim/gonuboard/util"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
@@ -45,50 +45,42 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	err = Run()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	e := echo.New()
+	e.Renderer = util.NewTemplateRenderer()
+	e.Logger.Fatal(Run(e))
 }
 
-func Run() error {
-	r := chi.NewRouter()
+func Run(e *echo.Echo) error {
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	e.Static("/static/*", "static")
+	e.Static("/templates/*", "templates")
 
-	staticServer := http.FileServer(http.Dir("static"))
-	r.Handle("/static/*", http.StripPrefix("/static", staticServer))
-	templatesServer := http.FileServer(http.Dir("templates"))
-	r.Handle("/templates/*", http.StripPrefix("/templates", templatesServer))
+	g := e.Group("/")
 
-	r.Group(func(r chi.Router) {
-		r.Use(mw.RequestMiddleware)
-		r.Use(mw.MainMiddleware)
-		r.Use(mw.UrlForMiddleware)
+	g.Use(mw.RequestMiddleware)
+	g.Use(mw.MainMiddleware)
+	g.Use(mw.UrlForMiddleware)
 
-		r.Get("/", defaultHandler)
-		r.Post("/generate_token", generateToken)
-		r.Route("/install", install.DefaultRouter)
-	})
+	g.GET("/", defaultHandler)
+	g.POST("/generate_token", generateToken)
+
+	install.DefaultRouter(e)
 
 	addr := ":8080"
 	fmt.Printf("running on %s\n", addr)
-	err := http.ListenAndServe(addr, r)
-	if err != nil {
-		return err
-	}
-	return nil
+	return e.Start(addr)
 }
 
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
+func defaultHandler(c echo.Context) error {
 	const templatePath = "templates/basic/index.html"
-	request := r.Context().Value(mw.KeyRequest)
-	data := exec.NewContext(map[string]any{
-		"request": request.(util.Request).ToMap(),
+	request := c.Get(mw.KeyRequest).(util.Request)
+	data := exec.NewContext(map[string]interface{}{
+		"request": request.ToMap(),
 	})
 
-	util.RenderTemplate(w, templatePath, data)
+	return util.RenderTemplate(c.Response().Writer, templatePath, data)
 }
 
 type TokenResponse struct {

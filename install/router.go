@@ -3,17 +3,6 @@ package install
 import (
 	"errors"
 	"fmt"
-	"github.com/dukhyungkim/gonuboard/config"
-	"github.com/dukhyungkim/gonuboard/db"
-	"github.com/dukhyungkim/gonuboard/lib"
-	"github.com/dukhyungkim/gonuboard/model"
-	"github.com/dukhyungkim/gonuboard/plugin"
-	"github.com/dukhyungkim/gonuboard/util"
-	"github.com/dukhyungkim/gonuboard/version"
-	"github.com/go-chi/chi/v5"
-	"github.com/jellydator/ttlcache/v3"
-	"github.com/nikolalohinski/gonja/v2/exec"
-	"gorm.io/gorm"
 	"io"
 	"log"
 	"net/http"
@@ -21,6 +10,18 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dukhyungkim/gonuboard/config"
+	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/lib"
+	"github.com/dukhyungkim/gonuboard/model"
+	"github.com/dukhyungkim/gonuboard/plugin"
+	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/dukhyungkim/gonuboard/version"
+	"github.com/jellydator/ttlcache/v3"
+	"github.com/labstack/echo/v4"
+	"github.com/nikolalohinski/gonja/v2/exec"
+	"gorm.io/gorm"
 )
 
 var formCache = ttlcache.New[string, *installForm](
@@ -28,12 +29,13 @@ var formCache = ttlcache.New[string, *installForm](
 	ttlcache.WithCapacity[string, *installForm](1),
 )
 
-func DefaultRouter(r chi.Router) {
-	r.Get("/", indexHandler())
-	r.Post("/", installDatabase())
-	r.Get("/license", licenseHandler())
-	r.Post("/form", formHandler())
-	r.Get("/process", installProcess())
+func DefaultRouter(e *echo.Echo) {
+	g := e.Group("/install")
+	g.GET("/", indexHandler())
+	g.POST("/", installDatabase())
+	g.GET("/license", licenseHandler())
+	g.POST("/form", formHandler())
+	g.GET("/process", installProcess())
 }
 
 func indexHandler() http.HandlerFunc {

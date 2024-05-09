@@ -3,20 +3,22 @@ package middleware
 import (
 	"context"
 	"errors"
-	"github.com/dukhyungkim/gonuboard/config"
-	"github.com/dukhyungkim/gonuboard/db"
-	"github.com/dukhyungkim/gonuboard/lib"
-	"github.com/dukhyungkim/gonuboard/model"
-	"github.com/dukhyungkim/gonuboard/service"
-	"github.com/dukhyungkim/gonuboard/util"
-	"github.com/nikolalohinski/gonja/v2/exec"
-	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/dukhyungkim/gonuboard/config"
+	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/lib"
+	"github.com/dukhyungkim/gonuboard/model"
+	"github.com/dukhyungkim/gonuboard/service"
+	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/labstack/echo/v4"
+	"github.com/nikolalohinski/gonja/v2/exec"
+	"gorm.io/gorm"
 )
 
 var mbIdChecker = regexp.MustCompile(`[^a-zA-Z0-9_]`)
@@ -237,20 +239,18 @@ func endsWith(path string, ends []string) bool {
 	return false
 }
 
-type CtxKey string
-
 const (
-	KeyRequest     CtxKey = "request"
-	KeyTemplateCtx CtxKey = "templateCtx"
+	KeyRequest     = "request"
+	KeyTemplateCtx = "templateCtx"
 )
 
-func RequestMiddleware(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		request := util.NewRequest(r)
-		ctx := context.WithValue(r.Context(), KeyRequest, request)
-		next.ServeHTTP(w, r.WithContext(ctx))
+func RequestMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		request := util.NewRequest(c.Request())
+		ctx := context.WithValue(c.Request().Context(), KeyRequest, request)
+		c.SetRequest(c.Request().WithContext(ctx))
+		return next(c)
 	}
-	return http.HandlerFunc(fn)
 }
 
 func setTemplateCtx(r *http.Request) {
@@ -271,12 +271,11 @@ func newDefaultTemplateCtx(request util.Request) *exec.Context {
 	})
 }
 
-func UrlForMiddleware(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		setUrlMapForInstall(r)
-		next.ServeHTTP(w, r)
+func UrlForMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		setUrlMapForInstall(c.Request())
+		return next(c)
 	}
-	return http.HandlerFunc(fn)
 }
 
 func setUrlMapForInstall(r *http.Request) {

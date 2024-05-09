@@ -1,24 +1,16 @@
 package util
 
 import (
-	"github.com/dukhyungkim/gonuboard/version"
-	"github.com/nikolalohinski/gonja/v2"
-	"github.com/nikolalohinski/gonja/v2/exec"
+	"io"
 	"log"
 	"net/http"
 	"sync"
+
+	"github.com/dukhyungkim/gonuboard/version"
+	"github.com/labstack/echo/v4"
+	"github.com/nikolalohinski/gonja/v2"
+	"github.com/nikolalohinski/gonja/v2/exec"
 )
-
-func init() {
-	setGlobalContext()
-}
-
-func setGlobalContext() {
-	defaultCtx := gonja.DefaultContext
-	defaultCtx.Set("default_version", version.Version)
-	defaultCtx.Set("theme_asset", themeAsset)
-	defaultCtx.Set("url_for", urlFor)
-}
 
 var UserTemplate = newUserTemplateProcessor()
 var AdminTemplate = newAdminTemplateProcessor()
@@ -50,7 +42,42 @@ func urlFor(assetPath string) string {
 	return value.(string)
 }
 
-func RenderTemplate(w http.ResponseWriter, path string, data *exec.Context) {
+type TemplateRenderer struct {
+	defaultCtx *exec.Context
+	templates  *exec.Template
+}
+
+func NewTemplateRenderer() *TemplateRenderer {
+	defaultCtx := exec.NewContext(map[string]interface{}{
+		"default_version": version.Version,
+		"theme_asset":     themeAsset,
+		"url_for":         urlFor,
+	})
+	return &TemplateRenderer{defaultCtx: defaultCtx}
+}
+
+func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
+	tpl, err := gonja.FromFile(name)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	ctxData := t.defaultCtx
+	if d, ok := data.(*exec.Context); ok {
+		ctxData.Update(d)
+	}
+
+	err = tpl.Execute(w, ctxData)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func RenderTemplate(w io.Writer, path string, data *exec.Context, c echo.Context) {
 	tpl, err := gonja.FromFile(path)
 	if err != nil {
 		log.Println(err)
