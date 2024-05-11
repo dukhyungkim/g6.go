@@ -23,50 +23,45 @@ import (
 
 var mbIdChecker = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
-func MainMiddleware(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		if !shouldRunMiddleware(r.URL.Path) {
-			next.ServeHTTP(w, r)
-			return
+func MainMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if !shouldRunMiddleware(c.Request().URL.Path) {
+			return next(c)
 		}
 
-		request := r.Context().Value(KeyRequest).(util.Request)
+		request := c.Get(KeyRequest).(util.Request)
 
 		engine := config.Global.DbEngine
 		dbConn, err := db.NewDB(engine)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		if !strings.HasPrefix(r.URL.Path, "/install") {
+		if !strings.HasPrefix(c.Request().URL.Path, "/install") {
 			if !config.ExistENV {
-				util.RenderAlertTemplate(w, request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
-				return
+				util.RenderAlertTemplate(c.Response(), request, ".env 파일이 없습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
+				return nil
 			}
 
 			ok, err := dbConn.HasTable(config.Global.DbTablePrefix + "config")
 			if err != nil {
 				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 			if !ok {
-				util.RenderAlertTemplate(w, request, "DB 또는 테이블이 존재하지 않습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
-				return
+				util.RenderAlertTemplate(c.Response(), request, "DB 또는 테이블이 존재하지 않습니다. 설치를 진행해 주세요.", http.StatusBadRequest, "/install")
+				return nil
 			}
 		} else {
-			setTemplateCtx(r)
-			next.ServeHTTP(w, r)
-			return
+			setTemplateCtx(c.Request())
+			return next(c)
 		}
 
 		cfg := model.Config{}
 		if dbConn.Take(&cfg).Error != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 		request.State.Config = cfg
 		request.State.Title = cfg.CfTitle
@@ -84,15 +79,14 @@ func MainMiddleware(next http.Handler) http.Handler {
 		ssMbKey := ""
 		sessionMbId := request.Session["ss_mb_id"]
 		cookieMbId := request.Cookies["ck_mb_id"]
-		clientIP := lib.GetClientIp(r)
+		clientIP := lib.GetClientIp(c.Request())
 
 		memberService := service.NewMemberService(dbConn)
 		if sessionMbId != "" {
 			member, err = memberService.CreateById(sessionMbId)
 			if err != nil {
 				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 			if member.IsInterceptOrLeave() {
 				request.Session = make(map[string]string)
@@ -102,13 +96,12 @@ func MainMiddleware(next http.Handler) http.Handler {
 			member, err = memberService.CreateById(mbId)
 			if err != nil {
 				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 			if !lib.IsSuperAdmin(request, mbId) &&
 				member.IsEmailCertify(cfg.CfUseEmailCertify == 1) &&
 				member.IsInterceptOrLeave() {
-				ssMbKey = lib.SessionMemberKey(r, member)
+				ssMbKey = lib.SessionMemberKey(c.Request(), member)
 				if request.Cookies["ck_auto"] == ssMbKey {
 					request.Session["ss_mb_id"] = cookieMbId
 					isAutoLogin = true
@@ -132,26 +125,26 @@ func MainMiddleware(next http.Handler) http.Handler {
 		}
 
 		if !lib.IsPossibleIP(request, clientIP) {
-			lib.SendHTML(w, "<meta charset=utf-8>접근이 허용되지 않은 IP 입니다.")
-			return
+			lib.SendHTML(c.Response(), "<meta charset=utf-8>접근이 허용되지 않은 IP 입니다.")
+			return nil
 		}
 		if lib.IsInterceptIP(request, clientIP) {
-			lib.SendHTML(w, "<meta charset=utf-8>접근이 차단된 IP 입니다.")
-			return
+			lib.SendHTML(c.Response(), "<meta charset=utf-8>접근이 차단된 IP 입니다.")
+			return nil
 		}
 
 		const secondsOfDay = 60 * 60 * 24
 		cookieDomain := request.State.CookieDomain
 
 		if isAutoLogin == true && request.Session["ss_mb_id"] != "" {
-			http.SetCookie(w, &http.Cookie{
+			http.SetCookie(c.Response(), &http.Cookie{
 				Name:   "ck_mb_id",
 				Value:  cookieMbId,
 				Domain: cookieDomain,
 				MaxAge: secondsOfDay * 30,
 			})
 
-			http.SetCookie(w, &http.Cookie{
+			http.SetCookie(c.Response(), &http.Cookie{
 				Name:   "ck_auto",
 				Value:  ssMbKey,
 				Domain: cookieDomain,
@@ -159,26 +152,25 @@ func MainMiddleware(next http.Handler) http.Handler {
 			})
 		}
 
-		ckVisitIP, err := r.Cookie("ck_visit_ip")
+		ckVisitIP, err := c.Request().Cookie("ck_visit_ip")
 		if err != nil {
 			ckVisitIP = &http.Cookie{}
 		}
 		if ckVisitIP.Value != clientIP {
-			http.SetCookie(w, &http.Cookie{
+			http.SetCookie(c.Response(), &http.Cookie{
 				Name:   "ck_visit_ip",
 				Value:  clientIP,
 				Domain: cookieDomain,
 				MaxAge: secondsOfDay,
 			})
-			err = lib.RecordVisit(r)
+			err = lib.RecordVisit(c.Request())
 			if err != nil {
 				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 		}
 
-		if !request.State.IsSuperAdmin && !strings.HasPrefix(r.URL.Path, "/admin") {
+		if !request.State.IsSuperAdmin && !strings.HasPrefix(c.Request().URL.Path, "/admin") {
 			mbId := ""
 			if member != nil {
 				mbId = member.MbID
@@ -192,29 +184,27 @@ func MainMiddleware(next http.Handler) http.Handler {
 					LoIP:       clientIP,
 					MbID:       mbId,
 					LoDatetime: time.Now(),
-					LoLocation: r.URL.Path,
-					LoURL:      r.URL.Path,
+					LoLocation: c.Request().URL.Path,
+					LoURL:      c.Request().URL.Path,
 				}
 				dbConn.Create(&newLogin)
 			} else if err != nil {
 				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 
 			currentLogin.MbID = mbId
 			currentLogin.LoDatetime = time.Now()
-			currentLogin.LoLocation = r.URL.Path
-			currentLogin.LoLocation = r.URL.Path
+			currentLogin.LoLocation = c.Request().URL.Path
+			currentLogin.LoLocation = c.Request().URL.Path
 			dbConn.Save(&currentLogin)
 		}
 
 		timeDelta := time.Unix(int64(cfg.CfLoginMinutes)*60, 0)
 		dbConn.Where("lo_datetime < ?", timeDelta).Delete(&model.Login{})
 
-		next.ServeHTTP(w, r)
+		return next(c)
 	}
-	return http.HandlerFunc(fn)
 }
 
 func shouldRunMiddleware(path string) bool {

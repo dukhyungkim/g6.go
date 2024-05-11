@@ -38,33 +38,32 @@ func DefaultRouter(e *echo.Echo) {
 	g.GET("/process", installProcess())
 }
 
-func indexHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func indexHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
 		const templatePath = "install/templates/main.html"
-		data := exec.NewContext(map[string]any{
+		data := exec.NewContext(map[string]interface{}{
 			"python_version":  version.RuntimeVersion,
 			"fastapi_version": version.RouterVersion,
 		})
 
-		util.RenderTemplate(w, templatePath, data)
+		return c.Render(http.StatusOK, templatePath, data)
 	}
 }
 
-func licenseHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func licenseHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
 		license, err := readLicense()
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
 		const templatePath = "install/templates/license.html"
-		data := exec.NewContext(map[string]any{
+		data := exec.NewContext(map[string]interface{}{
 			"license": license,
 		})
 
-		util.RenderTemplate(w, templatePath, data)
+		return c.Render(http.StatusOK, templatePath, data)
 	}
 }
 
@@ -76,36 +75,34 @@ func readLicense() (string, error) {
 	return string(license), nil
 }
 
-func formHandler() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func formHandler() echo.HandlerFunc {
+	return func(c echo.Context) error {
 		const templatePath = "install/templates/form.html"
-		data := exec.NewContext(map[string]any{})
+		data := exec.NewContext(map[string]interface{}{})
 
-		util.RenderTemplate(w, templatePath, data)
+		return c.Render(http.StatusOK, templatePath, data)
 	}
 }
 
-func installDatabase() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		form, err := parseInstallForm(r)
+func installDatabase() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		form, err := parseInstallForm(c.Request())
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 		}
 
 		sessionSecretKey, err := util.TokenURLSafe(50)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
 		err = copyFile("example.env", util.EnvPath)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
+
 		for _, setKey := range []func() error{
 			util.SetKeyToEnv(util.EnvPath, "DB_ENGINE", form.DBEngine),
 			util.SetKeyToEnv(util.EnvPath, "DB_HOST", form.DBHost),
@@ -117,10 +114,9 @@ func installDatabase() http.HandlerFunc {
 			util.SetKeyToEnv(util.EnvPath, "SESSION_SECRET_KEY", sessionSecretKey),
 			util.SetKeyToEnv(util.EnvPath, "COOKIE_DOMAIN", ""),
 		} {
-			if err = setKey(); err != nil {
+			if err := setKey(); err != nil {
 				log.Println(err)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 			}
 		}
 
@@ -128,27 +124,25 @@ func installDatabase() http.HandlerFunc {
 		_, err = db.NewDB(form.DBEngine)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
 		pluginList, err := plugin.ReadPluginState()
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
+
 		err = plugin.WritePluginState(pluginList)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
 		formCache.Set("form", form, ttlcache.DefaultTTL)
 
 		const templatePath = "install/templates/result.html"
-		util.RenderTemplate(w, templatePath, nil)
+		return c.Render(http.StatusOK, templatePath, nil)
 	}
 }
 
@@ -239,16 +233,19 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func installProcess() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		setSSEHeader(w)
+func installProcess() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		w := c.Response()
+		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Connection", "keep-alive")
 
 		form := formCache.Get("form").Value()
 
 		dbConn, err := db.NewDB(form.DBEngine)
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return
+			return nil
 		}
 		sendSSE(w, "데이터베이스 연결 완료")
 
@@ -256,7 +253,7 @@ func installProcess() http.HandlerFunc {
 			tables, err := dbConn.ListAllTables()
 			if err != nil {
 				sendSSE(w, failedInstallMessage(err))
-				return
+				return nil
 			}
 			targetPrefix := config.Global.DbTablePrefix + model.WriteTablePrefix
 			for _, table := range tables {
@@ -264,7 +261,7 @@ func installProcess() http.HandlerFunc {
 					err = dbConn.Migrator().DropTable(table)
 					if err != nil {
 						sendSSE(w, failedInstallMessage(err))
-						return
+						return nil
 					}
 				}
 			}
@@ -274,14 +271,14 @@ func installProcess() http.HandlerFunc {
 		err = dbConn.MigrateTables()
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return
+			return nil
 		}
 		sendSSE(w, "데이터베이스 테이블 생성 완료")
 
 		err = setupDefaultInformation(dbConn, form)
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return
+			return nil
 		}
 		sendSSE(w, "기본설정 정보 입력 완료")
 
@@ -289,7 +286,7 @@ func installProcess() http.HandlerFunc {
 			err = lib.CreateDynamicWriteTable(dbConn, board.BoTable)
 			if err != nil {
 				sendSSE(w, failedInstallMessage(err))
-				return
+				return nil
 			}
 		}
 		sendSSE(w, "게시판 테이블 생성 완료")
@@ -297,11 +294,12 @@ func installProcess() http.HandlerFunc {
 		err = setupDataDirectory()
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return
+			return nil
 		}
 		sendSSE(w, "데이터 경로 생성 완료")
 
 		sendSSE(w, fmt.Sprintf("[success] 축하합니다. %s 설치가 완료되었습니다.", version.Version))
+		return nil
 	}
 }
 
@@ -461,13 +459,7 @@ func failedInstallMessage(err error) string {
 	return fmt.Sprintf("[error] 설치가 실패했습니다. %v", err)
 }
 
-func setSSEHeader(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-}
-
-func sendSSE(w http.ResponseWriter, message string) {
+func sendSSE(w *echo.Response, message string) {
 	_, _ = fmt.Fprintf(w, "data: %s\n\n", message)
-	w.(http.Flusher).Flush()
+	w.Flush()
 }

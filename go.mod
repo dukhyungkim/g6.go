@@ -5,7 +5,6 @@ go 1.21.5
 require (
 	github.com/caarlos0/env/v11 v11.0.0
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-chi/render v1.0.3
 	github.com/google/uuid v1.6.0
 	github.com/jellydator/ttlcache/v3 v3.2.0
 	github.com/joho/godotenv v1.5.1
@@ -17,7 +16,6 @@ require (
 )
 
 require (
-	github.com/ajg/form v1.5.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect

@@ -77,22 +77,6 @@ func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c 
 	return nil
 }
 
-func RenderTemplate(w io.Writer, path string, data *exec.Context, c echo.Context) {
-	tpl, err := gonja.FromFile(path)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = tpl.Execute(w, data)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
 func AlertTemplate(req Request, message string, redirect string) ([]byte, error) {
 	tpl, err := gonja.FromFile("templates/basic/alert.html")
 	if err != nil {

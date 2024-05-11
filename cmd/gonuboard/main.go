@@ -13,7 +13,6 @@ import (
 	"github.com/dukhyungkim/gonuboard/install"
 	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/dukhyungkim/gonuboard/util"
-	"github.com/go-chi/render"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/nikolalohinski/gonja/v2/exec"
@@ -80,7 +79,7 @@ func defaultHandler(c echo.Context) error {
 		"request": request.ToMap(),
 	})
 
-	return util.RenderTemplate(c.Response().Writer, templatePath, data)
+	return c.Render(http.StatusOK, templatePath, data)
 }
 
 type TokenResponse struct {
@@ -99,12 +98,12 @@ func (t TokenResponse) Render(http.ResponseWriter, *http.Request) error {
 	return nil
 }
 
-func generateToken(w http.ResponseWriter, r *http.Request) {
+func generateToken(c echo.Context) error {
 	tokenHex, err := util.TokenHex(16)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	_ = render.Render(w, r, NewTokenResponse(tokenHex))
+
+	return c.JSON(http.StatusOK, NewTokenResponse(tokenHex))
 }
