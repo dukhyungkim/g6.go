@@ -21,6 +21,26 @@ import (
 	"gorm.io/gorm"
 )
 
+func LoggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		lib.Logger.LogInfo().Fields(map[string]interface{}{
+			"method": c.Request().Method,
+			"uri":    c.Request().URL.Path,
+			"query":  c.Request().URL.RawQuery,
+		}).Msg("Request")
+
+		err := next(c)
+		if err != nil {
+			lib.Logger.LogError().Fields(map[string]interface{}{
+				"error": err.Error(),
+			}).Msg("Response")
+			return err
+		}
+
+		return nil
+	}
+}
+
 var mbIdChecker = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 func MainMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
