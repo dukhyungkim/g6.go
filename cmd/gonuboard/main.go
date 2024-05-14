@@ -11,7 +11,6 @@ import (
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/install"
-	"github.com/dukhyungkim/gonuboard/lib"
 	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/labstack/echo/v4"
@@ -51,8 +50,7 @@ func main() {
 }
 
 func Run(e *echo.Echo) error {
-	lib.NewLogger()
-	e.Use(mw.LoggingMiddleware)
+	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	e.Static("/static/*", "static")

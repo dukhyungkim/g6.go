@@ -11,7 +11,6 @@ require (
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/mileusna/useragent v1.3.4
 	github.com/nikolalohinski/gonja/v2 v2.2.1
-	github.com/rs/zerolog v1.32.0
 	golang.org/x/crypto v0.23.0
 	gorm.io/gorm v1.25.10
 )
