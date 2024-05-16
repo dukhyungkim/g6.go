@@ -11,10 +11,10 @@ import (
 	"github.com/dukhyungkim/gonuboard/config"
 	"github.com/dukhyungkim/gonuboard/db"
 	"github.com/dukhyungkim/gonuboard/install"
+	"github.com/dukhyungkim/gonuboard/lib"
 	mw "github.com/dukhyungkim/gonuboard/middleware"
 	"github.com/dukhyungkim/gonuboard/util"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/gin-gonic/gin"
 	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
@@ -44,19 +44,18 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	e := echo.New()
-	e.Renderer = util.NewTemplateRenderer()
-	e.Logger.Fatal(Run(e))
+	r := gin.Default()
+	r.HTMLRender = util.NewTemplateRenderer()
+	if err = Run(); err != nil {
+		log.Fatal(err)
+	}
 }
 
-func Run(e *echo.Echo) error {
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+func Run(r *gin.Engine) error {
+	r.Static("/static", "static")
+	r.Static("/templates", "templates")
 
-	e.Static("/static/*", "static")
-	e.Static("/templates/*", "templates")
-
-	g := e.Group("/")
+	g := r.Group("/")
 
 	g.Use(mw.RequestMiddleware)
 	g.Use(mw.MainMiddleware)
@@ -65,21 +64,21 @@ func Run(e *echo.Echo) error {
 	g.GET("/", defaultHandler)
 	g.POST("/generate_token", generateToken)
 
-	install.DefaultRouter(e)
+	install.DefaultRouter(r)
 
 	addr := ":8080"
 	fmt.Printf("running on %s\n", addr)
-	return e.Start(addr)
+	return r.Run(addr)
 }
 
-func defaultHandler(c echo.Context) error {
+func defaultHandler(c *gin.Context) {
 	const templatePath = "templates/basic/index.html"
-	request := c.Get(mw.KeyRequest).(util.Request)
+	request := c.MustGet(mw.KeyRequest).(util.Request)
 	data := exec.NewContext(map[string]interface{}{
 		"request": request.ToMap(),
 	})
 
-	return c.Render(http.StatusOK, templatePath, data)
+	c.HTML(http.StatusOK, templatePath, data)
 }
 
 type TokenResponse struct {
@@ -94,16 +93,13 @@ func NewTokenResponse(token string) TokenResponse {
 	}
 }
 
-func (t TokenResponse) Render(http.ResponseWriter, *http.Request) error {
-	return nil
-}
-
-func generateToken(c echo.Context) error {
+func generateToken(c *gin.Context) {
 	tokenHex, err := util.TokenHex(16)
 	if err != nil {
 		log.Println(err)
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+		return
 	}
 
-	return c.JSON(http.StatusOK, NewTokenResponse(tokenHex))
+	c.JSON(http.StatusOK, NewTokenResponse(tokenHex))
 }

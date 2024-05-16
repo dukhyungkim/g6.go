@@ -18,6 +18,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/plugin"
 	"github.com/dukhyungkim/gonuboard/util"
 	"github.com/dukhyungkim/gonuboard/version"
+	"github.com/gin-gonic/gin"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/labstack/echo/v4"
 	"github.com/nikolalohinski/gonja/v2/exec"
@@ -29,24 +30,26 @@ var formCache = ttlcache.New[string, *installForm](
 	ttlcache.WithCapacity[string, *installForm](1),
 )
 
-func DefaultRouter(e *echo.Echo) {
-	g := e.Group("/install")
-	g.GET("/", indexHandler())
-	g.POST("/", installDatabase())
-	g.GET("/license", licenseHandler())
-	g.POST("/form", formHandler())
-	g.GET("/process", installProcess())
+func DefaultRouter(r *gin.Engine) {
+	g := r.Group("/install")
+	{
+		g.GET("/", indexHandler())
+		g.POST("/", installDatabase())
+		g.GET("/license", licenseHandler())
+		g.POST("/form", formHandler())
+		g.GET("/process", installProcess())
+	}
 }
 
-func indexHandler() echo.HandlerFunc {
-	return func(c echo.Context) error {
+func indexHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		const templatePath = "install/templates/main.html"
 		data := exec.NewContext(map[string]interface{}{
 			"python_version":  version.RuntimeVersion,
 			"fastapi_version": version.RouterVersion,
 		})
 
-		return c.Render(http.StatusOK, templatePath, data)
+		c.HTML(http.StatusOK, templatePath, data)
 	}
 }
 
@@ -84,23 +87,26 @@ func formHandler() echo.HandlerFunc {
 	}
 }
 
-func installDatabase() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		form, err := parseInstallForm(c.Request())
+func installDatabase() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		form, err := parseInstallForm(c.Request)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			c.JSON(http.StatusBadRequest, lib.NewErrorResponse(err))
+			return
 		}
 
 		sessionSecretKey, err := util.TokenURLSafe(50)
 		if err != nil {
 			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+			return
 		}
 
 		err = copyFile("example.env", util.EnvPath)
 		if err != nil {
 			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+			return
 		}
 
 		for _, setKey := range []func() error{
@@ -114,9 +120,10 @@ func installDatabase() echo.HandlerFunc {
 			util.SetKeyToEnv(util.EnvPath, "SESSION_SECRET_KEY", sessionSecretKey),
 			util.SetKeyToEnv(util.EnvPath, "COOKIE_DOMAIN", ""),
 		} {
-			if err := setKey(); err != nil {
+			if err = setKey(); err != nil {
 				log.Println(err)
-				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+				c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+				return
 			}
 		}
 
@@ -124,25 +131,28 @@ func installDatabase() echo.HandlerFunc {
 		_, err = db.NewDB(form.DBEngine)
 		if err != nil {
 			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+			return
 		}
 
 		pluginList, err := plugin.ReadPluginState()
 		if err != nil {
 			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+			return
 		}
 
 		err = plugin.WritePluginState(pluginList)
 		if err != nil {
 			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+			return
 		}
 
 		formCache.Set("form", form, ttlcache.DefaultTTL)
 
 		const templatePath = "install/templates/result.html"
-		return c.Render(http.StatusOK, templatePath, nil)
+		c.HTML(http.StatusOK, templatePath, nil)
 	}
 }
 
