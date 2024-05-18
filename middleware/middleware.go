@@ -16,6 +16,7 @@ import (
 	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/service"
 	"github.com/dukhyungkim/gonuboard/util"
+	"github.com/gin-gonic/gin"
 	"github.com/labstack/echo/v4"
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"gorm.io/gorm"
@@ -234,12 +235,12 @@ const (
 	KeyTemplateCtx = "templateCtx"
 )
 
-func RequestMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		request := util.NewRequest(c.Request())
-		ctx := context.WithValue(c.Request().Context(), KeyRequest, request)
-		c.SetRequest(c.Request().WithContext(ctx))
-		return next(c)
+func RequestMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		request := util.NewRequest(c.Request)
+		ctx := context.WithValue(c.Request.Context(), KeyRequest, request)
+		c.Request = c.Request.WithContext(ctx)
+		c.Next()
 	}
 }
 
@@ -261,10 +262,10 @@ func newDefaultTemplateCtx(request util.Request) *exec.Context {
 	})
 }
 
-func UrlForMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		setUrlMapForInstall(c.Request())
-		return next(c)
+func UrlForMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		setUrlMapForInstall(c.Request)
+		c.Next()
 	}
 }
 

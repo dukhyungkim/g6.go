@@ -46,7 +46,7 @@ func main() {
 
 	r := gin.Default()
 	r.HTMLRender = util.NewTemplateRenderer()
-	if err = Run(); err != nil {
+	if err = Run(r); err != nil {
 		log.Fatal(err)
 	}
 }
@@ -57,9 +57,9 @@ func Run(r *gin.Engine) error {
 
 	g := r.Group("/")
 
-	g.Use(mw.RequestMiddleware)
+	g.Use(mw.RequestMiddleware())
 	g.Use(mw.MainMiddleware)
-	g.Use(mw.UrlForMiddleware)
+	g.Use(mw.UrlForMiddleware())
 
 	g.GET("/", defaultHandler)
 	g.POST("/generate_token", generateToken)

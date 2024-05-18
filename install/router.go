@@ -20,7 +20,6 @@ import (
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/gin-gonic/gin"
 	"github.com/jellydator/ttlcache/v3"
-	"github.com/labstack/echo/v4"
 	"github.com/nikolalohinski/gonja/v2/exec"
 	"gorm.io/gorm"
 )
@@ -53,12 +52,13 @@ func indexHandler() gin.HandlerFunc {
 	}
 }
 
-func licenseHandler() echo.HandlerFunc {
-	return func(c echo.Context) error {
+func licenseHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		license, err := readLicense()
 		if err != nil {
 			log.Println(err)
-			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			c.JSON(http.StatusInternalServerError, lib.NewErrorResponse(err))
+			return
 		}
 
 		const templatePath = "install/templates/license.html"
@@ -66,7 +66,7 @@ func licenseHandler() echo.HandlerFunc {
 			"license": license,
 		})
 
-		return c.Render(http.StatusOK, templatePath, data)
+		c.HTML(http.StatusOK, templatePath, data)
 	}
 }
 
@@ -78,12 +78,12 @@ func readLicense() (string, error) {
 	return string(license), nil
 }
 
-func formHandler() echo.HandlerFunc {
-	return func(c echo.Context) error {
+func formHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		const templatePath = "install/templates/form.html"
 		data := exec.NewContext(map[string]interface{}{})
 
-		return c.Render(http.StatusOK, templatePath, data)
+		c.HTML(http.StatusOK, templatePath, data)
 	}
 }
 
@@ -243,9 +243,9 @@ func copyFile(src, dst string) error {
 	return nil
 }
 
-func installProcess() echo.HandlerFunc {
-	return func(c echo.Context) error {
-		w := c.Response()
+func installProcess() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		w := c.Writer
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
@@ -255,7 +255,7 @@ func installProcess() echo.HandlerFunc {
 		dbConn, err := db.NewDB(form.DBEngine)
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return nil
+			return
 		}
 		sendSSE(w, "데이터베이스 연결 완료")
 
@@ -263,7 +263,7 @@ func installProcess() echo.HandlerFunc {
 			tables, err := dbConn.ListAllTables()
 			if err != nil {
 				sendSSE(w, failedInstallMessage(err))
-				return nil
+				return
 			}
 			targetPrefix := config.Global.DbTablePrefix + model.WriteTablePrefix
 			for _, table := range tables {
@@ -271,7 +271,7 @@ func installProcess() echo.HandlerFunc {
 					err = dbConn.Migrator().DropTable(table)
 					if err != nil {
 						sendSSE(w, failedInstallMessage(err))
-						return nil
+						return
 					}
 				}
 			}
@@ -281,14 +281,14 @@ func installProcess() echo.HandlerFunc {
 		err = dbConn.MigrateTables()
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return nil
+			return
 		}
 		sendSSE(w, "데이터베이스 테이블 생성 완료")
 
 		err = setupDefaultInformation(dbConn, form)
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return nil
+			return
 		}
 		sendSSE(w, "기본설정 정보 입력 완료")
 
@@ -296,7 +296,7 @@ func installProcess() echo.HandlerFunc {
 			err = lib.CreateDynamicWriteTable(dbConn, board.BoTable)
 			if err != nil {
 				sendSSE(w, failedInstallMessage(err))
-				return nil
+				return
 			}
 		}
 		sendSSE(w, "게시판 테이블 생성 완료")
@@ -304,12 +304,11 @@ func installProcess() echo.HandlerFunc {
 		err = setupDataDirectory()
 		if err != nil {
 			sendSSE(w, failedInstallMessage(err))
-			return nil
+			return
 		}
 		sendSSE(w, "데이터 경로 생성 완료")
 
 		sendSSE(w, fmt.Sprintf("[success] 축하합니다. %s 설치가 완료되었습니다.", version.Version))
-		return nil
 	}
 }
 
@@ -469,7 +468,7 @@ func failedInstallMessage(err error) string {
 	return fmt.Sprintf("[error] 설치가 실패했습니다. %v", err)
 }
 
-func sendSSE(w *echo.Response, message string) {
+func sendSSE(w gin.ResponseWriter, message string) {
 	_, _ = fmt.Fprintf(w, "data: %s\n\n", message)
 	w.Flush()
 }
