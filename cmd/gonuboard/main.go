@@ -45,7 +45,7 @@ func main() {
 	}
 
 	r := gin.Default()
-	r.HTMLRender = util.NewTemplateRenderer()
+	r.HTMLRender = util.NewTemplateEngine()
 	if err = Run(r); err != nil {
 		log.Fatal(err)
 	}
@@ -55,14 +55,14 @@ func Run(r *gin.Engine) error {
 	r.Static("/static", "static")
 	r.Static("/templates", "templates")
 
-	g := r.Group("/")
+	r.Group("/")
 
-	g.Use(mw.RequestMiddleware())
-	g.Use(mw.MainMiddleware)
-	g.Use(mw.UrlForMiddleware())
+	r.Use(mw.RequestMiddleware())
+	r.Use(mw.MainMiddleware())
+	r.Use(mw.UrlForMiddleware())
 
-	g.GET("/", defaultHandler)
-	g.POST("/generate_token", generateToken)
+	r.GET("/", defaultHandler)
+	r.POST("/generate_token", generateToken)
 
 	install.DefaultRouter(r)
 

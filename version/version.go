@@ -21,7 +21,7 @@ func init() {
 	}
 
 	for _, dep := range bi.Deps {
-		if !strings.Contains(dep.Path, "go-chi") {
+		if !strings.Contains(dep.Path, "gin-gonic") {
 			continue
 		}
 		RouterVersion = dep.Version
