@@ -276,7 +276,6 @@ func UrlForMiddleware() gin.HandlerFunc {
 		util.UrlMap.Store("install_form", installURL+"/form")
 		util.UrlMap.Store("install", installURL)
 		util.UrlMap.Store("index", "/")
-		log.Println(request.BaseURL)
 
 		c.Next()
 	}

@@ -1,10 +1,15 @@
 package util
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"sync"
 
+	"github.com/dukhyungkim/gonuboard/db"
+	"github.com/dukhyungkim/gonuboard/model"
 	"github.com/dukhyungkim/gonuboard/version"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/render"
@@ -12,8 +17,63 @@ import (
 	"github.com/nikolalohinski/gonja/v2/exec"
 )
 
-func themeAsset(_ map[string]any, assetPath string) string {
-	return "templates/basic/static/" + assetPath
+const (
+	templates      = "templates"
+	adminTemplates = "admin/templates"
+
+	defaultTheme = "basic"
+)
+
+var (
+	templatesDir      = getThemePath()
+	adminTemplatesDir = getAdminThemePath()
+)
+
+func getCurrentTheme() string {
+	dbConn := db.GetInstance()
+	if dbConn == nil {
+		return defaultTheme
+	}
+
+	var theme string
+	if err := dbConn.Model(model.Config{}).Select("cf_theme").Scan(&theme).Error; err != nil {
+		return defaultTheme
+	}
+	return theme
+}
+
+func getThemePath() string {
+	const defaultThemePath = templates + "/" + defaultTheme
+	theme := getCurrentTheme()
+	themePath := templates + "/" + theme
+
+	if _, err := os.Stat(themePath); os.IsNotExist(err) {
+		return defaultThemePath
+	}
+	return themePath
+}
+
+func getAdminThemePath() string {
+	const defaultThemePath = adminTemplates + "/" + defaultTheme
+
+	theme := os.Getenv("ADMIN_THEME")
+
+	if _, err := os.Stat(theme); os.IsNotExist(err) {
+		return defaultThemePath
+	}
+	return theme
+}
+
+func themeAsset(r map[string]any, assetPath string) string {
+	theme := getCurrentTheme()
+
+	request := MapToStruct[Request](r)
+	var mobileDir string
+	if request.State.IsMobile {
+		mobileDir = "/mobile"
+	}
+	fmt.Println(fmt.Sprintf("/theme_static/%s%s/%s", theme, mobileDir, assetPath))
+	return fmt.Sprintf("/theme_static/%s%s/%s", theme, mobileDir, assetPath)
 }
 
 var UrlMap = sync.Map{}
@@ -73,25 +133,6 @@ func (r Renderer) Render(w http.ResponseWriter) error {
 
 func (r Renderer) WriteContentType(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-}
-
-func AlertTemplate(req Request, message string, redirect string) ([]byte, error) {
-	tpl, err := gonja.FromFile("templates/basic/alert.html")
-	if err != nil {
-		return nil, err
-	}
-	data := exec.NewContext(map[string]any{
-		"request": req.ToMap(),
-		"errors":  []string{message},
-		"url":     redirect,
-	})
-
-	bytes, err := tpl.ExecuteToBytes(data)
-	if err != nil {
-		return nil, err
-	}
-
-	return bytes, nil
 }
 
 func RenderAlertTemplate(c *gin.Context, request Request, message string, statusCode int, redirect string) {

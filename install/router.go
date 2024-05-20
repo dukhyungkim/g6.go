@@ -126,6 +126,7 @@ func installDatabase() gin.HandlerFunc {
 				return
 			}
 		}
+		config.Global.DbTablePrefix = form.DBTablePrefix
 
 		// TODO use db handler
 		_, err = db.NewDB(form.DBEngine)

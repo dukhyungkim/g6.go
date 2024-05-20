@@ -44,6 +44,8 @@ type Config struct {
 }
 
 func Load() error {
+	setDefaultValue(&Global)
+
 	err := godotenv.Load()
 	if err != nil {
 		return err
@@ -56,4 +58,8 @@ func Load() error {
 
 	ExistENV = true
 	return nil
+}
+
+func setDefaultValue(c *Config) {
+	c.DbTablePrefix = "g6_"
 }
